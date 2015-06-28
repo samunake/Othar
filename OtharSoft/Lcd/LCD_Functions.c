@@ -17,8 +17,6 @@
 
 
 
-
-
 /* Register Functions ----------------------------------------------------------------------------------*/
 
 //STATUS REGISTER
@@ -130,7 +128,7 @@ void Display_OFF(void)
 *******************************************************************************/
 void Normal_Mode_exitSleep(void)
 {
-	LCD_WriteReg(0x01,0x00); //PWRR
+	LCD_WriteReg_ANDMask(0x01,0xFD); //PWRR
 }
 
 /*******************************************************************************
@@ -159,7 +157,7 @@ void Sleep_Mode(void)
 void Software_Reset(void)
 {
 	LCD_WriteReg(0x01,0x01); //PWRR
-    LCD_WriteData(0x00);
+    LCD_WriteData(0x00);// No hay que hacer un writeCmd primero ?
     Delay_ms(1);
 }
 
@@ -174,10 +172,7 @@ void Software_Reset(void)
 *******************************************************************************/
 void PCLK_inversion(void)
 {
-    uint8_t temp;
-    temp = LCD_ReadReg(0x04); //PCRS
-    temp |= 0x80;
-    LCD_WriteData(temp);
+	LCD_WriteReg_ORMask(0x04,0x80);//PCSR
 }
 
 
@@ -192,10 +187,8 @@ void PCLK_inversion(void)
 *******************************************************************************/
 void PCLK_non_inversion(void)
 {
-    uint8_t temp;
-    temp = LCD_ReadReg(0x04); //PCRS
-    temp &= 0x7f;
-    LCD_WriteData(temp);
+
+	LCD_WriteReg_ANDMask(0x04,0x7f);//PCSR
 }
 
 /*******************************************************************************
@@ -212,11 +205,7 @@ void PCLK_non_inversion(void)
 *******************************************************************************/
 void PCLK_width(uint8_t setx) //uint8_t[1:0]
 {
-    uint8_t temp;
-    temp = LCD_ReadReg(0x04); //PCRS
-    temp &=0x80;
-    temp |= setx;
-    LCD_WriteData(temp);
+    LCD_WriteReg_ANDORMask(0x04,0x80,setx);//PCSR
 }
 
 //REG[05h]
@@ -230,10 +219,7 @@ void PCLK_width(uint8_t setx) //uint8_t[1:0]
 *******************************************************************************/
 void Serial_ROM_select0(void)
 {
-    uint8_t temp;
-    temp = LCD_ReadReg(0x05); //SROC
-    temp &=0x7f;
-    LCD_WriteData(temp);
+   LCD_WriteReg_ANDMask(0x05,0x7f);//SROC
 }
 
 /*******************************************************************************
@@ -246,10 +232,7 @@ void Serial_ROM_select0(void)
 *******************************************************************************/
 void Serial_ROM_select1(void)
 {
-    uint8_t temp;
-    temp = LCD_ReadReg(0x05); //SROC
-    temp |=0x80;
-    LCD_WriteData(temp);
+	LCD_WriteReg_ORMask(0x05,0x80);//SROC
 }
 
 /*******************************************************************************
@@ -262,12 +245,9 @@ void Serial_ROM_select1(void)
 *******************************************************************************/
 void Serial_ROM_Address_set_24bit(void)
 {
-    uint8_t temp;
-	temp = LCD_ReadReg(0x05);
-    temp &=0Xbf; //Bit 6 a 0
-
-	LCD_WriteReg(0x05,temp);
+    LCD_WriteReg_ANDMask(0x05,0xbf);//SROC
 }
+
 /*******************************************************************************
 * Function Name  : Serial_ROM_Address_set_32bit
 * Description    : 32 bits address mode
@@ -278,12 +258,9 @@ void Serial_ROM_Address_set_24bit(void)
 *******************************************************************************/
 void Serial_ROM_Address_set_32bit(void)
 {
-    uint8_t temp;
-	temp = LCD_ReadReg(0x05);
-    temp |=0Xbf; // Bit 6 a 1
-
-		LCD_WriteReg(0x05,temp);
+	LCD_WriteReg_ORMask(0x05,0x40);//SROC
 }
+
 /*******************************************************************************
 * Function Name  : Select_Serial_Waveform_mode0
 * Description    : Mode 0.
@@ -294,11 +271,7 @@ void Serial_ROM_Address_set_32bit(void)
 *******************************************************************************/
 void Select_Serial_Waveform_mode0(void)
 {
-    uint8_t temp;
-    temp = LCD_ReadReg(0x05);
-    temp &=0xdf;// Bit 5 a 0
-
-    LCD_WriteReg(0x05,temp);
+    LCD_WriteReg_ANDMask(0x05,0xdf);//SROC
 }
 /*******************************************************************************
 * Function Name  : Select_Serial_Waveform_mode3
@@ -310,11 +283,7 @@ void Select_Serial_Waveform_mode0(void)
 *******************************************************************************/
 void Select_Serial_Waveform_mode3(void)
 {
-    uint8_t temp;
-    temp = LCD_ReadReg(0x05);
-    temp |=0xdf;// Bit 5 a 1
-
-  	LCD_WriteReg(0x05,temp);
+    LCD_WriteReg_ORMask(0x05,0x20);//SROC
 }
 /*******************************************************************************
 * Function Name  : SERIAL_ROM_Read_Cycle_4bus
@@ -326,13 +295,9 @@ void Select_Serial_Waveform_mode3(void)
 *******************************************************************************/
 void SERIAL_ROM_Read_Cycle_4bus(void)
 {
-    uint8_t temp;
-    temp = LCD_ReadReg(0x05);
-    temp &=0xE7;// Bits 3 y 4 a 0
-
-	LCD_WriteReg(0x05,temp);
-
+	LCD_WriteReg_ANDMask(0x05,0xE7);//SROC
 }
+
 /*******************************************************************************
 * Function Name  : SERIAL_ROM_Read_Cycle_5bus
 * Description    : 5 bus -> no dummy cycle
@@ -343,12 +308,7 @@ void SERIAL_ROM_Read_Cycle_4bus(void)
 *******************************************************************************/
 void SERIAL_ROM_Read_Cycle_5bus(void)
 {
-    uint8_t temp;
-    temp = LCD_ReadReg(0x05);
-    temp &=0xEF;//Bit 4 a 0
-    temp |=0x04;//Bit 3 a 1
-
-    LCD_WriteReg(0x05,temp);
+	LCD_WriteReg_ANDORMask(0x05,0xEF,0x08);//SROC
 }
 /*******************************************************************************
 * Function Name  : SERIAL_ROM_Read_Cycle_6bus
@@ -360,11 +320,7 @@ void SERIAL_ROM_Read_Cycle_5bus(void)
 *******************************************************************************/
 void SERIAL_ROM_Read_Cycle_6bus(void)
 {
-	uint8_t temp;
-    temp = LCD_ReadReg(0x05);
-    temp |=0xE0;//Bit 4 a 1
-
-	LCD_WriteReg(0x05,temp);
+	LCD_WriteReg_ORMask(0x05,0x10);//SROC
 }
 /*******************************************************************************
 * Function Name  : SERIAL_ROM_Font_mode
@@ -376,10 +332,7 @@ void SERIAL_ROM_Read_Cycle_6bus(void)
 *******************************************************************************/
 void SERIAL_ROM_Font_mode(void)
 {
-	uint8_t temp;
-    temp = LCD_ReadReg(0x05);
-    temp &=0xFB;//Bit 2 a 0
-    LCD_WriteReg(0x05,temp);
+	LCD_WriteReg_ANDMask(0x05,0xFB);//SROC
 }
 
 
@@ -393,27 +346,22 @@ void SERIAL_ROM_Font_mode(void)
 *******************************************************************************/
 void SERIAL_ROM_DMA_mode(void)
 {
-	uint8_t temp;
-    temp = LCD_ReadReg(0x05);
-    temp |=0x04;//Bit 2 a 1
-
-    LCD_WriteReg(0x05,temp);
+	LCD_WriteReg_ORMask(0x05,0x04);//SROC
 }
+
 /*******************************************************************************
-* Function Name  : SERIAL_ROM_Signal_mode
+* Function Name  : SERIAL_ROM_Single_mode
 * Description    : Single Mode
 * Input          : None
 * Output         : None
 * Return         : None
 * Attention		   : None
 *******************************************************************************/
-void SERIAL_ROM_Signal_mode(void)
-{   uint8_t temp;
-    temp = LCD_ReadReg(0x05);
-    temp &=0xFD;//Bit 1 a 0
-
-    LCD_WriteReg(0x05,temp);
+void SERIAL_ROM_Single_mode(void)
+{
+	LCD_WriteReg_ANDMask(0x05,0xFD);//SROC
 }
+
 /*******************************************************************************
 * Function Name  : SERIAL_ROM_Dual_mode0
 * Description    : Dual Mode 0
@@ -424,13 +372,10 @@ void SERIAL_ROM_Signal_mode(void)
 *******************************************************************************/
 
 void SERIAL_ROM_Dual_mode0(void)
-{   uint8_t temp;
-    temp = LCD_ReadReg(0x05);
-	temp |=0x02;//Bit 1 a 1
-    temp &=0xFE;//Bit 0 a 0
-
-	LCD_WriteReg(0x05,temp);
+{
+	LCD_WriteReg_ANDORMask(0x05,0xFE,0x02);//SROC
 }
+
 /*******************************************************************************
 * Function Name  : SERIAL_ROM_Dual_mode1
 * Description    : Dual Mode 1
@@ -440,12 +385,10 @@ void SERIAL_ROM_Dual_mode0(void)
 * Attention		   : None
 *******************************************************************************/
 void SERIAL_ROM_Dual_mode1(void)
-{   uint8_t temp;
-    temp = LCD_ReadReg(0x05);
-    temp |=0x03;//Bits 1 y 0 a 1
-
-    LCD_WriteReg(0x05,temp);
+{
+	LCD_WriteReg_ORMask(0x05,0x03);//SROC
 }
+
 /*******************************************************************************
 * Function Name  : SROM_CLK_DIV
 * Description    : Serial Flash/ROM Clock Frequency Setting
@@ -461,7 +404,7 @@ void SERIAL_ROM_Dual_mode1(void)
 *******************************************************************************/
 void SROM_CLK_DIV(uint8_t CLK_DIV)
 {
-	LCD_WriteReg(0x06,CLK_DIV);
+	LCD_WriteReg(0x06,CLK_DIV);//SFCLR
 }
 
 //REG[10h]
@@ -475,12 +418,9 @@ void SROM_CLK_DIV(uint8_t CLK_DIV)
 *******************************************************************************/
 void Color_256(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x10);
-	temp &= 0xF3;// Bits 3 y 2 a 0
-
-	LCD_WriteReg(0x10,temp);
+	LCD_WriteReg_ANDMask(0x10,0xF3);//SYSR
 }
+
 /*******************************************************************************
 * Function Name  : Color_65K
 * Description    : Color Depth Setting 16-bpp generic TFT, i.e. 65K colors.
@@ -491,11 +431,7 @@ void Color_256(void)
 *******************************************************************************/
 void Color_65K(void)
 {
-     uint8_t temp;
-     temp = LCD_ReadReg(0x10);
-     temp |=0x08 ;//Bit 3 a 1
-
-	 LCD_WriteReg(0x10,temp);
+	LCD_WriteReg_ORMask(0x10,0x08);//SYSR
 }
 
 /*******************************************************************************
@@ -508,12 +444,9 @@ void Color_65K(void)
 *******************************************************************************/
 void MPU_8bit_Interface(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x10);
-	temp &= 0xFC ; //Bits 0 y 1 a 0
-
-	LCD_WriteReg(0x10,temp);
+	LCD_WriteReg_ANDMask(0x10,0xFC);//SYSR
 }
+
 /*******************************************************************************
 * Function Name  : MPU_16bit_Interface
 * Description    : MCUIF Selection £¬ 16-bit MCU Interface.
@@ -524,11 +457,7 @@ void MPU_8bit_Interface(void)
 *******************************************************************************/
 void MPU_16bit_Interface(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x10);
-	temp |= 0x02 ;//Bit 1 a 1
-
-	LCD_WriteReg(0x10,temp);
+	LCD_WriteReg_ORMask(0x10,0x02);//SYSR
 }
 
 //REG[12h]
@@ -571,11 +500,7 @@ void GPO_data(uint8_t setx)
 *******************************************************************************/
 void One_Layer(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x20);
-	temp &= 0x7F;// Bit 7 a 0
-
-	LCD_WriteReg(0x20,temp);
+	LCD_WriteReg_ANDMask(0x20,0x7f);//DPCR
 }
 
 /*******************************************************************************
@@ -587,12 +512,10 @@ void One_Layer(void)
 * Attention		   : None
 *******************************************************************************/
 void Two_Layers(void)
-{	uint8_t temp;
-	temp = LCD_ReadReg(0x20);
-	temp |= 0x80;// Bit 7 a 1
-
-	LCD_WriteReg(0x20,temp);
+{
+	LCD_WriteReg_ORMask(0x20,0x80);//DPCR
 }
+
 /*******************************************************************************
 * Function Name  : HDIR_SEG0_SEGn
 * Description    : Horizontal Scan Direction, for n = SEG number. SEG0 to SEG(n-1).
@@ -602,12 +525,10 @@ void Two_Layers(void)
 * Attention		   : None
 *******************************************************************************/
 void HDIR_SEG0_SEGn(void)
-{	uint8_t temp;
-	temp = LCD_ReadReg(0x20);
-	temp &= 0xf7;//Bit 3 a 0
-
-	LCD_WriteReg(0x20,temp);
+{
+	LCD_WriteReg_ANDMask(0x20,0xf7);//DPCR
 }
+
 /*******************************************************************************
 * Function Name  : HDIR_SEGn_SEG0
 * Description    : Horizontal Scan Direction, for n = SEG number. SEG(n-1) to SEG0.
@@ -618,12 +539,9 @@ void HDIR_SEG0_SEGn(void)
 *******************************************************************************/
 void HDIR_SEGn_SEG0(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x20);
-	temp |= 0x08;//Bit 3 a 1
-
-	LCD_WriteReg(0x20,temp);
+	LCD_WriteReg_ORMask(0x20,0x08);//DPCR
 }
+
 /*******************************************************************************
 * Function Name  : VDIR_COM0_COMn
 * Description    : Vertical Scan direction, for n = COM numbe £ºCOM0 to COM(n-1)
@@ -634,12 +552,9 @@ void HDIR_SEGn_SEG0(void)
 *******************************************************************************/
 void VDIR_COM0_COMn(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x20);
-	temp &= 0xfb;//Bit 2 a 0
-
-	LCD_WriteReg(0x20,temp);
+	LCD_WriteReg_ANDMask(0x20,0xfb);//DPCR
 }
+
 /*******************************************************************************
 * Function Name  : VDIR_COMn_COM0
 * Description    : Vertical Scan direction, for n = COM numbe £ºCOM(n-1) to COM0
@@ -650,11 +565,7 @@ void VDIR_COM0_COMn(void)
 *******************************************************************************/
 void VDIR_COMn_COM0(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x20);
-	temp |= 0x04; // Bit 2 a 1
-
-	LCD_WriteReg(0x20,temp);
+	LCD_WriteReg_ORMask(0x20,0x04);//DPCR
 }
 
 //REG[21h]
@@ -670,11 +581,7 @@ void VDIR_COMn_COM0(void)
 *******************************************************************************/
 void CGROM_Font(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x21);
-	temp &= 0x7f; //Bit 7 a 0
-
-	LCD_WriteReg(0x21,temp);
+	LCD_WriteReg_ANDMask(0x21,0x7F);//FNCR0
 }
 /*******************************************************************************
 * Function Name  : CGROM_Font
@@ -688,12 +595,9 @@ void CGROM_Font(void)
 *******************************************************************************/
 void CGRAM_Font(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x21);
-	temp |= 0x80;//Bit 7 a 1
-
-	LCD_WriteReg(0x21,temp);
+	LCD_WriteReg_ORMask(0x21,0x80);//FNCR0
 }
+
 /*******************************************************************************
 * Function Name  : Internal_CGROM
 * Description    : External/Internal CGROM Selection Bit £¬
@@ -706,11 +610,7 @@ void CGRAM_Font(void)
 
 void Internal_CGROM(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x21);
-	temp &= 0xdf;//Bit 5 a 0
-
-	LCD_WriteReg(0x21,temp);
+	LCD_WriteReg_ANDMask(0x21,0xdf);//FNCR0
 }
 /*******************************************************************************
 * Function Name  : External_CGROM
@@ -723,12 +623,9 @@ void Internal_CGROM(void)
 *******************************************************************************/
 void External_CGROM(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x21);
-	temp |= 0x20;// Bit 5 a 1
-
-	LCD_WriteReg(0x21,temp);
+	LCD_WriteReg_ORMask(0x21,0x20);//FNCR0
 }
+
 /*******************************************************************************
 * Function Name  : ISO8859_1
 * Description    :  When FNCR0 B7 = 0 and B5 = 0, Internal CGROM supports the
@@ -744,12 +641,9 @@ void External_CGROM(void)
 *******************************************************************************/
 void ISO8859_1(void)
 {
-	uint8_t temp;
-	temp = LLCD_ReadReg(0x21);
-	temp &= 0xfc;//Bits 1 y 0 a 0
-
-	LCD_WriteReg(0x21,temp);
+	LCD_WriteReg_ANDMask(0x21,0xFC);//FNCR0
 }
+
 /*******************************************************************************
 * Function Name  : ISO8859_2
 * Description    :  When FNCR0 B7 = 0 and B5 = 0, Internal CGROM supports the
@@ -765,13 +659,9 @@ void ISO8859_1(void)
 *******************************************************************************/
 void ISO8859_2(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x21);
-	temp &=0xfd ;//Bit 1 a 0
-	temp |=0x01; //Bit 0 a 1
-
-	LCD_WriteReg(0x21,temp);
+	LCD_WriteReg_ANDORMask(0x21,0xFD,0x01);//FNCR0
 }
+
 /*******************************************************************************
 * Function Name  : ISO8859_3
 * Description    :  When FNCR0 B7 = 0 and B5 = 0, Internal CGROM supports the
@@ -787,12 +677,7 @@ void ISO8859_2(void)
 *******************************************************************************/
 void ISO8859_3(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadData(0x21);
-	temp &= 0xfe; //Bit 0 a 0
-	temp |= 0x02; //Bit 1 a 1
-
-	LCD_WriteReg(0x21,temp);
+	LCD_WriteReg_ANDORMask(0x21,0xFE,0x02);//FNCR0
 }
 /*******************************************************************************
 * Function Name  : ISO8859_4
@@ -809,11 +694,7 @@ void ISO8859_3(void)
 *******************************************************************************/
 void ISO8859_4(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x21);
-	temp |= 0x03;//Bits 1 y 0 a 1
-
-	LCD_WriteReg(0x21,temp);
+	LCD_WriteReg_ORMask(0x21,0x03);//FNCR0
 }
 
 
@@ -828,11 +709,7 @@ void ISO8859_4(void)
 *******************************************************************************/
 void No_FullAlignment(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x22);
-	temp &= 0x7f;//Bit 7 a 0
-
-	LCD_WriteReg(0x22,temp);
+	LCD_WriteReg_ANDMask(0x22,0x7F);//FNCR1
 }
 
 /*******************************************************************************
@@ -845,11 +722,7 @@ void No_FullAlignment(void)
 *******************************************************************************/
 void FullAlignment(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x22);
-	temp |= 0x80;//Bit 7 a 1
-
-	LCD_WriteReg(0x22,temp);
+	LCD_WriteReg_ORMask(0x22,0x80);//FNCR1
 }
 
 /*******************************************************************************
@@ -862,11 +735,7 @@ void FullAlignment(void)
 *******************************************************************************/
 void Font_with_BackgroundColor(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x22);
-	temp &= 0xbf;//Bit 6 a 0
-
-	LCD_WriteReg(0x22,temp);
+	LCD_WriteReg_ANDMask(0x22,0xBF);//FNCR1
 }
 
 /*******************************************************************************
@@ -879,11 +748,7 @@ void Font_with_BackgroundColor(void)
 *******************************************************************************/
 void Font_with_BackgroundTransparency(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x22);
-	temp |= 0x40;//Bit 6 a 1
-
-	LCD_WriteReg(0x22,temp);
+	LCD_WriteReg_ORMask(0x22,0x40);//FNCR1
 }
 
 /*******************************************************************************
@@ -896,11 +761,7 @@ void Font_with_BackgroundTransparency(void)
 *******************************************************************************/
 void NoRotate_Font(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x22);
-	temp &= 0xef;//Bit 4 a 0
-
-	LCD_WriteReg(0x22,temp);
+	LCD_WriteReg_ANDMask(0x22,0xEF);//FNCR1
 }
 
 /*******************************************************************************
@@ -913,11 +774,7 @@ void NoRotate_Font(void)
 *******************************************************************************/
 void Rotate90_Font(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x22);
-	temp |= 0x10;// Bit 4 a 1
-
-	LCD_WriteReg(0x22,temp);
+	LCD_WriteReg_ORMask(0x22,0x10);//FNCR1
 }
 
 /*******************************************************************************
@@ -930,11 +787,7 @@ void Rotate90_Font(void)
 *******************************************************************************/
 void Horizontal_FontEnlarge_x1(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x22);
-	temp &= 0xf3;//Bits 2 y 3 a 0
-
-	LCD_WriteReg(0x22,temp);
+	LCD_WriteReg_ANDMask(0x22,0xF3);//FNCR1
 }
 
 /*******************************************************************************
@@ -947,12 +800,7 @@ void Horizontal_FontEnlarge_x1(void)
 *******************************************************************************/
 void Horizontal_FontEnlarge_x2(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x22);
-	temp &= 0xf7;//Bit 3 a 0
-	temp |= 0x04;//Bit 2 a 1
-
-	LCD_WriteReg(0x22,temp);
+	LCD_WriteReg_ANDORMask(0x22,0xF7,0x04);//FNCR1
 }
 
 /*******************************************************************************
@@ -965,12 +813,7 @@ void Horizontal_FontEnlarge_x2(void)
 *******************************************************************************/
 void Horizontal_FontEnlarge_x3(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x22);
-	temp &= 0xfb;//Bit 2 a 0
-	temp |= 0x08;//Bit 3 a 1
-
-	LCD_WriteReg(0x22,temp);
+	LCD_WriteReg_ANDORMask(0x22,0xFB,0x08);//FNCR1
 }
 
 /*******************************************************************************
@@ -983,11 +826,7 @@ void Horizontal_FontEnlarge_x3(void)
 *******************************************************************************/
 void Horizontal_FontEnlarge_x4(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x22);
-	temp |= 0x0c;//Bits 2 y 3 a 1
-
-	LCD_WriteReg(0x22,temp);
+	LCD_WriteReg_ORMask(0x22,0x0C);//FNCR1
 }
 
 /*******************************************************************************
@@ -1000,11 +839,7 @@ void Horizontal_FontEnlarge_x4(void)
 *******************************************************************************/
 void Vertical_FontEnlarge_x1(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x22);
-	temp &= 0xfc;//Bits 0 y 1 a 0
-
-	LCD_WriteReg(0x22,temp);
+	LCD_WriteReg_ANDMask(0x22,0xFC);//FNCR1
 }
 
 /*******************************************************************************
@@ -1017,12 +852,7 @@ void Vertical_FontEnlarge_x1(void)
 *******************************************************************************/
 void Vertical_FontEnlarge_x2(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x22);
-	temp &= 0xfd;//Bit 1 a 0
-	temp |= 0x01;//Bit 0 a 1
-
-	LCD_WriteReg(0x22,temp);
+	LCD_WriteReg_ANDORMask(0x22,0xFD,0x01);//FNCR1
 }
 
 /*******************************************************************************
@@ -1035,12 +865,7 @@ void Vertical_FontEnlarge_x2(void)
 *******************************************************************************/
 void Vertical_FontEnlarge_x3(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x22);
-	temp &= 0xfe;//Bit 0 a 1
-	temp |= 0x02;//Bit 1 a 0
-
-	LCD_WriteReg(0x22,temp);
+	LCD_WriteReg_ANDORMask(0x22,0xFE,0x02);//FNCR1
 }
 
 /*******************************************************************************
@@ -1053,11 +878,7 @@ void Vertical_FontEnlarge_x3(void)
 *******************************************************************************/
 void Vertical_FontEnlarge_x4(void)
 {
-	uint8_t temp;
-	temp = LCD_ReadReg(0x22);
-	temp |= 0x03;//Bit 0 y 1 a 1
-
-	LCD_WriteReg(0x22,temp);
+	LCD_WriteReg_ORMask(0x22,0x03);//FNCR1
 }
 
 
@@ -1146,11 +967,7 @@ void Font_Coordinate(uint16_t X,uint16_t Y)
 *******************************************************************************/
 void Font_size_16x16_8x16(void)
 {
- 	uint8_t temp;
-	temp = LCD_ReadReg(0x2E);
-	temp &= 0x3f;//Bits 6 y 7 a 0
-
-	LCD_WriteReg(0x2E,temp);
+	LCD_WriteReg_ANDMask(0x2E,0x3F);//FWTSR
 }
 
 /*******************************************************************************
@@ -1163,12 +980,7 @@ void Font_size_16x16_8x16(void)
 *******************************************************************************/
 void Font_size_24x24_12x24(void)
 {
- 	uint8_t temp;
-	temp = LCD_ReadReg(0x2E);
-	temp &= 0x7f;//Bit 7 a 0
-	temp |= 0x40; //Bit 6 a 1
-
-	LCD_WriteReg(0x2E,temp);
+	LCD_WriteReg_ANDORMask(0x2E,0x7F,0x40);//FWTSR
 }
 
 /*******************************************************************************
@@ -1181,11 +993,7 @@ void Font_size_24x24_12x24(void)
 *******************************************************************************/
 void Font_size_32x32_16x32(void)
 {
- 	uint8_t temp;
-	temp = LCD_ReadReg(0x2E);
-	temp |= 0x80;//Bit 7 a 1
-
-	LCD_WriteReg(0x2E,temp);
+	LCD_WriteReg_ORMask(0x2E,0x80);//FWTSR
 }
 
 /*******************************************************************************
@@ -1197,13 +1005,11 @@ void Font_size_32x32_16x32(void)
 * Attention		 : None
 *******************************************************************************/
 void Font_spacing_set(uint8_t setx) //uint8_t[5:0]
-{   uint8_t temp,temp1;
-    temp1=setx&0x3F;//Nos quedamos con los bits 5:0 de setx
-   	temp = LCD_ReadReg(0x2E);
-	temp &= 0xc0;//Bits 5:0 a 0
-	temp |= temp1;
-	LCD_WriteReg(0x2E,temp);
+{
+	uint8_t temp;
+    temp=setx&0x3F;//Nos quedamos con los bits 5:0 de setx
 
+    LCD_WriteReg_ANDORMask(0x2E,0xC0,temp);//FWTSR
 }
 
 //REG[2Fh]
@@ -1216,11 +1022,8 @@ void Font_spacing_set(uint8_t setx) //uint8_t[5:0]
 * Attention		 : None
 *******************************************************************************/
 void GT_serial_ROM_select_GT21L16TW(void)//GT21L16T1W
-{ uint8_t temp;
-  temp = LCD_ReadReg(0x2F);
-  temp &= 0x1f;//Bit 5:7 a 0
-
-  LCD_WriteReg(0x2F,temp);
+{
+	LCD_WriteReg_ANDMask(0x2F,0x1F);
 }
 
 
@@ -1233,12 +1036,8 @@ void GT_serial_ROM_select_GT21L16TW(void)//GT21L16T1W
 * Attention		 : None
 *******************************************************************************/
 void GT_serial_ROM_select_GT30L16U2W(void)
-{ uint8_t temp;
-  temp = LCD_ReadReg(0x2F);
-  temp &= 0x1f;//Bit 5:7 a 0
-  temp |= 0x20;//Bit 5 a 1
-
-  LCD_WriteReg(0x2F,temp);
+{
+	LCD_WriteReg_ANDORMask(0x2F,0x1F,0x20);
 }
 
 
@@ -1251,12 +1050,8 @@ void GT_serial_ROM_select_GT30L16U2W(void)
 * Attention		 : None
 *******************************************************************************/
 void GT_serial_ROM_select_GT30L24T3Y(void)//GT30H24T3Y
-{ uint8_t temp;
-  temp = LCD_ReadReg(0x2F);
-  temp &= 0x1f;//Bit 5:7 a 0
-  temp |= 0x40;//Bit 6 a 1
-
-  LCD_WriteReg(0x2F,temp);
+{
+	LCD_WriteReg_ANDORMask(0x2F,0x1F,0x40);
 }
 
 /*******************************************************************************
@@ -1268,12 +1063,8 @@ void GT_serial_ROM_select_GT30L24T3Y(void)//GT30H24T3Y
 * Attention		 : None
 *******************************************************************************/
 void GT_serial_ROM_select_GT30L24M1Z(void)
-{ uint8_t temp;
-  temp = LCD_ReadReg(0x2F);
-  temp &= 0x1f;//Bit 5:7 a 0
-  temp |= 0x60;//Bit 5 y 6 a 1
-
-  LCD_WriteReg(0x2F,temp);
+{
+	LCD_WriteReg_ANDORMask(0x2F,0x1F,0x60);
 }
 
 
@@ -1286,12 +1077,8 @@ void GT_serial_ROM_select_GT30L24M1Z(void)
 * Attention		 : None
 *******************************************************************************/
 void GT_serial_ROM_select_GT30L32S4W(void)//GT30H32S4W
-{ uint8_t temp;
-  temp = LCD_ReadReg(0x2F);
-  temp &= 0x1f;//Bit 5:7 a 0
-  temp |= 0x80;//Bit 7 a 1
-
-  LCD_WriteReg(0x2F,temp);
+{
+	LCD_WriteReg_ANDORMask(0x2F,0x1F,0x80);
 }
 
 
@@ -1304,13 +1091,9 @@ void GT_serial_ROM_select_GT30L32S4W(void)//GT30H32S4W
 * Attention		 : None
 *******************************************************************************/
 void Font_code_GB2312(void)
-{ uint8_t temp;
-  temp = LCD_ReadReg(0x2F);
-  temp &= 0xE3;//Bits 4:2 a 0
-
-  LCD_WriteReg(0x2F,temp);
+{
+	LCD_WriteReg_ANDMask(0x2F,0xE3);
 }
-
 
 /*******************************************************************************
 * Function Name  : Font_code_GB12345
@@ -1321,14 +1104,9 @@ void Font_code_GB2312(void)
 * Attention		 : None
 *******************************************************************************/
 void Font_code_GB12345(void)//GB18030
-{ uint8_t temp;
-  temp = LCD_ReadReg(0x2F);
-  temp &= 0xE3;//Bits 4:2 a 0
-  temp |= 0x04;//Bit 2 a 1
-
-  LCD_WriteReg(0x2F,temp);
+{
+	LCD_WriteReg_ANDORMask(0x2F,0xE3,0x04);
 }
-
 
 /*******************************************************************************
 * Function Name  : Font_code_BIG5
@@ -1339,12 +1117,8 @@ void Font_code_GB12345(void)//GB18030
 * Attention		 : None
 *******************************************************************************/
 void Font_code_BIG5(void)
-{ uint8_t temp;
-  temp = LCD_ReadReg(0x2F);
-  temp &= 0xE3;//Bits 4:2 a 0
-  temp |= 0x08;//Bit 3 a 1
-
-  LCD_WriteReg(0x2F,temp);
+{
+	LCD_WriteReg_ANDORMask(0x2F,0xE3,0x08);
 }
 
 /*******************************************************************************
@@ -1356,12 +1130,8 @@ void Font_code_BIG5(void)
 * Attention		 : None
 *******************************************************************************/
 void Font_code_UNICODE(void)
-{ uint8_t temp;
-  temp = LCD_ReadReg(0x2F);
-  temp &= 0xE3;//Bits 4:2 a 0
-  temp |= 0x0C;//Bits 3 y 4 a 1
-
-  LCD_WriteReg(0x2F,temp);
+{
+	LCD_WriteReg_ANDORMask(0x2F,0xE3,0x0C);
 }
 
 /*******************************************************************************
@@ -1373,12 +1143,8 @@ void Font_code_UNICODE(void)
 * Attention		 : None
 *******************************************************************************/
 void Font_code_ASCII(void)
-{ uint8_t temp;
-  temp = LCD_ReadReg(0x2F);
-  temp &= 0xE3;//Bits 4:2 a 0
-  temp |= 0x10;//Bit 4 a 1
-
-  LCD_WriteReg(0x2F,temp);
+{
+	LCD_WriteReg_ANDORMask(0x2F,0xE3,0x10);
 }
 
 /*******************************************************************************
@@ -1390,12 +1156,8 @@ void Font_code_ASCII(void)
 * Attention		 : None
 *******************************************************************************/
 void Font_code_UNIJIS(void)
-{ uint8_t temp;
-  temp = LCD_ReadReg(0x2F);
-  temp &= 0xE3;//Bits 4:2 a 0
-  temp |= 0x14;//Bits 4 y 2 a 1
-
-  LCD_WriteReg(0x2F,temp);
+{
+	LCD_WriteReg_ANDORMask(0x2F,0xE3,0x14);
 }
 
 
@@ -1408,14 +1170,9 @@ void Font_code_UNIJIS(void)
 * Attention		 : None
 *******************************************************************************/
 void Font_code_JIS0208(void)
-{ uint8_t temp;
-  temp = LCD_ReadReg(0x2F);
-  temp &= 0xE3;//Bits 4:2 a 0
-  temp |= 0x18;//Bits 4 y 3 a 1
-
-  LCD_WriteReg(0x2F,temp);
+{
+	LCD_WriteReg_ANDORMask(0x2F,0XE3,0x18);
 }
-
 
 /*******************************************************************************
 * Function Name  : Font_code_LATIN
@@ -1426,14 +1183,9 @@ void Font_code_JIS0208(void)
 * Attention		 : None
 *******************************************************************************/
 void Font_code_LATIN(void)
-{ uint8_t temp;
-  temp = LCD_ReadReg(0x2F);
-  temp &= 0xE3;//Bits 4:2 a 0
-  temp |= 0x1C;//Bits 4:2 a 1
-
-  LCD_WriteReg(0x2F,temp);
+{
+	LCD_WriteReg_ANDORMask(0x2F,0xE3,0x1C);
 }
-
 
 /*******************************************************************************
 * Function Name  : Font_Standard
@@ -1444,13 +1196,9 @@ void Font_code_LATIN(void)
 * Attention		 : None
 *******************************************************************************/
 void Font_Standard(void)
-{ uint8_t temp;
-  temp = LCD_ReadReg(0x2F);
-  temp &= 0xFC;//Bits 0 y 1 a 0
-
-  LCD_WriteReg(0x2F,temp);
+{
+	LCD_WriteReg_ANDMask(0x2F,0xFC);
 }
-
 
 /*******************************************************************************
 * Function Name  : Font_Arial
@@ -1461,14 +1209,9 @@ void Font_Standard(void)
 * Attention		 : None
 *******************************************************************************/
 void Font_Arial(void)
-{ uint8_t temp;
-  temp = LCD_ReadReg(0x2F);
-  temp &= 0xFE;//Bit 1 a 0
-  temp |= 0x01;//Bit 0 a 1
-
-  LCD_WriteReg(0x2F,temp);
+{
+	LCD_WriteReg_ANDORMask(0x2F,0xFE,0x01);
 }
-
 
 /*******************************************************************************
 * Function Name  : Font_Roman
@@ -1479,12 +1222,8 @@ void Font_Arial(void)
 * Attention		 : None
 *******************************************************************************/
 void Font_Roman(void)
-{ uint8_t temp;
-  temp = LCD_ReadReg(0x2F);
-  temp &= 0xFd;//Bit 0 a 0
-  temp |= 0x02;//Bit 1 a 1
-
-  LCD_WriteReg(0x2F,temp);
+{
+	LCD_WriteReg_ANDORMask(0x2F,0xFD,0x02);
 }
 
 
@@ -1497,11 +1236,8 @@ void Font_Roman(void)
 * Attention		 : None
 *******************************************************************************/
 void Font_Bold(void) //for ASCII
-{ uint8_t temp;
-  temp = LCD_ReadReg(0x2F);
-  temp |= 0x03;//Bit 0 y 1 a 1
-
-  LCD_WriteReg(0x2F,temp);
+{
+	LCD_WriteReg_ORMask(0x2F,0x03);
 }
 
 //REG[30h]~REG[37h]

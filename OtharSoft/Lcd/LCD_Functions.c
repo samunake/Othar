@@ -665,8 +665,8 @@ void VDIR_COMn_COM0(void)
 * Output         : None
 * Return         : None
 * Attention		 :  The bit is used to select the bit-map source when text-
-										mode is active(REG[40h] bit 7 is 1), when CGRAM is
-										writing(REG[41h] bit 3-2 =01b), the bit  must be set as ¡°0¡±.
+					mode is active(REG[40h] bit 7 is 1), when CGRAM is
+					writing(REG[41h] bit 3-2 =01b), the bit  must be set as ¡°0¡±.
 *******************************************************************************/
 void CGROM_Font(void)
 {
@@ -683,8 +683,8 @@ void CGROM_Font(void)
 * Output         : None
 * Return         : None
 * Attention		 :  The bit is used to select the bit-map source when text-
-										mode is active(REG[40h] bit 7 is 1), when CGRAM is
-										writing(REG[41h] bit 3-2 =01b), the bit  must be set as ¡°0¡±.
+					mode is active(REG[40h] bit 7 is 1), when CGRAM is
+					writing(REG[41h] bit 3-2 =01b), the bit  must be set as ¡°0¡±.
 *******************************************************************************/
 void CGRAM_Font(void)
 {
@@ -697,7 +697,7 @@ void CGRAM_Font(void)
 /*******************************************************************************
 * Function Name  : Internal_CGROM
 * Description    : External/Internal CGROM Selection Bit £¬
-									 Internal CGROM is selected.(REG[2Fh] must be set 00h )
+				   Internal CGROM is selected.(REG[2Fh] must be set 00h )
 * Input          : None
 * Output         : None
 * Return         : None
@@ -2276,52 +2276,766 @@ void BTE_rectangular_Data(void)
 	LCD_DataWrite(temp);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-//REG[60h]
+//REG[51h]
 /*******************************************************************************
-* Function Name  : Text Color
-* Description    : Set screen color
-* Input          : Color: Screen Color
+* Function Name  : BTE_ROP_Code
+* Description    :
+* Input          : None
 * Output         : None
 * Return         : None
-* Attention		 : None
+* Attention	     : None
 *******************************************************************************/
-void Text_color(uint16_t color)
+void BTE_ROP_Code(uint8_t setx)
 {
+    LCD_WriteReg(0x51,setx);//BECR1
+}
 
-	LCD_WriteReg(0x63,((color&0xf800)>>11));
-    LCD_WriteReg(0x64,((color&0x07e0)>>5));
-    LCD_WriteReg(0x65,color&0x001f);
+//REG[52h]
+/*******************************************************************************
+* Function Name  : Layer1_Visible
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Layer1_Visible(void)
+{
+	uint8_t temp;
+	temp = LCD_WriteReg(0x52);//LTPR0
+	temp&=0xf8;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Layer2_Visible
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Layer2_Visible(void)
+{
+	uint8_t temp;
+	temp = LCD_WriteReg(0x52);//LTPR0
+	temp&=0xf8;
+	temp|=0x01;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Transparent_Mode
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Transparent_Mode(void)
+{
+	uint8_t temp;
+	temp = LCD_WriteReg(0x52);//LTPR0
+	temp&=0xf8;
+	temp|=0x03;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Lighten_Overlay_Mode
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Lighten_Overlay_Mode(void)
+{
+	uint8_t temp;
+	temp = LCD_WriteReg(0x52);//LTPR0
+	temp&=0xf8;
+	temp|=0x02;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Boolean_OR
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Boolean_OR(void)
+{
+	uint8_t temp;
+	temp = LCD_WriteReg(0x52);//LTPR0
+	temp&=0xf8;
+	temp|=0x04;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Boolean_AND
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Boolean_AND(void)
+{
+	uint8_t temp;
+	temp = LCD_WriteReg(0x52);//LTPR0
+	temp&=0xf8;
+	temp|=0x05;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Floating_window_mode
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Floating_window_mode(void)
+{
+	uint8_t temp;
+	temp = LCD_WriteReg(0x52);//LTPR0
+	temp&=0xf8;
+	temp|=0x06;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Floating_Window_transparent_with_BGTR_enable
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Floating_Window_transparent_with_BGTR_enable(void)
+{
+	uint8_t temp;
+	temp = LCD_WriteReg(0x52);//LTPR0
+	temp|=0x20;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Floating_Window_transparent_with_BGTR_disable
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Floating_Window_transparent_with_BGTR_disable(void)
+{
+	uint8_t temp;
+	temp = LCD_WriteReg(0x52);//LTPR0
+	temp&=0xdf;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Layer1_2_scroll
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Layer1_2_scroll(void)
+{
+	uint8_t temp;
+	temp = LCD_WriteReg(0x52);//LTPR0
+	temp&=0x3f;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Layer1_scroll
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Layer1_scroll(void)
+{
+	uint8_t temp;
+	temp = LCD_WriteReg(0x52);//LTPR0
+	temp&=0x3f;
+	temp|=0x40;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Layer2_scroll
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Layer2_scroll(void)
+{
+	uint8_t temp;
+	temp = LCD_WriteReg(0x52);//LTPR0
+	temp&=0x3f;
+	temp|=0x80;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Buffer_scroll
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Buffer_scroll(void)
+{
+	uint8_t temp;
+	temp = LCD_WriteReg(0x52);//LTPR0
+	temp&=0x3f;
+	temp|=0xC0;
+	LCD_WriteData(temp);
+}
+
+//REG[53h]
+/*******************************************************************************
+* Function Name  : layer2_1_transparency
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void layer2_1_transparency(uint8_t setx)
+{
+	LCD_WriteReg(0x53,setx);//LTPR1
+}
+
+//REG[54h]~ [5Fh]
+/*******************************************************************************
+* Function Name  : BTE_Source_Destination
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void BTE_Source_Destination	(uint16_t XL,uint16_t XR ,uint16_t YT ,uint16_t YB)
+{
+    uint8_t temp,temp1;
+
+    LCD_WriteReg(0x54,XL);//HSBE0
+    LCD_WriteReg(0x55,XL>>8);//HSBE1
+
+    LCD_WriteReg(0x58,XR);//HDBE0
+    LCD_WriteReg(0x59,XR>>8);//HDBE1
+
+    LCD_WriteReg(0x56,YT);//VSBE0
+    temp=YT>>8;
+    temp1 = LCD_ReadReg(0x57);
+    temp1 &= 0x80;
+    temp=temp|temp1;
+    LCD_WriteReg(0x57,temp);//VSBE1
+
+    LCD_WriteReg(0x5a,YB);//VDBE0
+    temp=YB>>8;
+    temp1 = LCD_ReadReg(0x5b);
+    temp1 &= 0x80;
+    temp=temp|temp1;
+    LCD_WriteReg(0x5b,temp);//VDBE1
+}
+
+/*******************************************************************************
+* Function Name  : Source_Layer1
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Source_Layer1(void)
+{
+    uint8_t temp;
+    LCD_ReadReg(0x57);//VSBE1
+    temp &= 0x7f ;
+    LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Source_Layer2
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Source_Layer2(void)
+{
+	uint8_t temp;
+	LCD_ReadReg(0x57);//VSBE1
+	temp &= 0x80 ;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Destination_Layer1
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Destination_Layer1(void)
+{
+	uint8_t temp;
+	LCD_ReadReg(0x5b);//VDBE1
+	temp &= 0x7f ;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Destination_Layer2
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Destination_Layer2(void)
+{
+	uint8_t temp;
+	LCD_ReadReg(0x5b);//VDBE1
+	temp &= 0x80 ;
+	LCD_WriteData(temp);
 
 }
+
+/*******************************************************************************
+* Function Name  : BTE_Size_setting
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void BTE_Size_setting(uint16_t X,uint16_t Y)
+{
+	LCD_WriteReg(0x5c,X);//BEWR0
+	LCD_WriteReg(0x5d,X>>8);//BEWR1
+
+	LCD_WriteReg(0x5e,Y);//BEHR0
+	LCD_WriteReg(0x5f,Y>>8);//BEHR1
+}
+
+
+//REG[60h]~REG[69h]
 /*******************************************************************************
 * Function Name  : Background_color
 * Description    :
 * Input          : None
 * Output         : None
 * Return         : None
-* Attention		 : None
+* Attention	     : None
 *******************************************************************************/
 void Background_color(uint16_t color)
 {
-	LCD_WriteReg(0x60,color>>11);
 
-    LCD_WriteReg(0x61,color>>5);
+	LCD_WriteReg(0x60,(color&0xf800)>>11);
 
-    LCD_WriteReg(0x62,color);
+    LCD_WriteReg(0x61,(color&0x07e0)>>5);
+
+    LCD_WriteReg(0x62,(color&0x001f));
 }
+
+/*******************************************************************************
+* Function Name  : Foreground_color
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Foreground_color(uint16_t color)
+{
+
+	 LCD_WriteReg(0x63,(color&0xf800)>>11);
+
+	 LCD_WriteReg(0x64,(color&0x07e0)>>5);
+
+	 LCD_WriteReg(0x65,(color&0x001f));
+}
+
+/*******************************************************************************
+* Function Name  : Text_Background_Color
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Text_Background_Color(uint8_t setR,uint8_t setG,uint8_t setB)
+{
+	LCD_WriteReg(0x60,setR);
+
+	LCD_WriteReg(0x61,setG);
+
+	LCD_WriteReg(0x62,setB);
+}
+
+/*******************************************************************************
+* Function Name  : Text_Foreground_Color
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Text_Foreground_Color(uint8_t setR,uint8_t setG,uint8_t setB)
+{
+	LCD_WriteReg(0x63,setR);
+
+	LCD_WriteReg(0x64,setG);
+
+	LCD_WriteReg(0x65,setB);
+
+}
+
+/*******************************************************************************
+* Function Name  : BTE_Background_color
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void BTE_Background_color(uint8_t setR,uint8_t setG,uint8_t setB)
+{
+	LCD_WriteReg(0x60,setR);
+
+	LCD_WriteReg(0x61,setG);
+
+	LCD_WriteReg(0x62,setB);
+}
+
+/*******************************************************************************
+* Function Name  : BTE_Foreground_color
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void BTE_Foreground_color(uint8_t setR,uint8_t setG,uint8_t setB)
+{
+	LCD_WriteReg(0x63,setR);
+
+	LCD_WriteReg(0x64,setG);
+
+	LCD_WriteReg(0x65,setB);
+}
+
+/*******************************************************************************
+* Function Name  : BTE_Background_red
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void BTE_Background_red(uint8_t setx)
+{
+	LCD_WriteReg(0x60,setx);
+}
+
+/*******************************************************************************
+* Function Name  : BTE_Background_green
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void BTE_Background_green(uint8_t setx)
+{
+	LCD_WriteReg(0x61,setx);
+}
+
+/*******************************************************************************
+* Function Name  : BTE_Background_blue
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void BTE_Background_blue(uint8_t setx)
+{
+	LCD_WriteReg(0x62,setx);
+}
+
+/*******************************************************************************
+* Function Name  : BTE_Foreground_red
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void BTE_Foreground_red(uint8_t setx)
+{
+	LCD_WriteReg(0x63,setx);
+}
+
+/*******************************************************************************
+* Function Name  : BTE_Foreground_green
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void BTE_Foreground_green(uint8_t setx)
+{
+	LCD_WriteReg(0x64,setx);
+}
+
+/*******************************************************************************
+* Function Name  : BTE_Foreground_blue
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void BTE_Foreground_blue(uint8_t setx)
+{
+	LCD_WriteReg(0x65,setx);
+}
+
+/*******************************************************************************
+* Function Name  : Pattern_Set_8x8
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Pattern_Set_8x8(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x66); //PTNO
+	temp &= 0x7f;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Pattern_Set_16x16
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Pattern_Set_16x16(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x66); //PTNO
+	temp |= 0x80;
+	LCD_WriteData(temp);
+
+}
+
+/*******************************************************************************
+* Function Name  : Pattern_Set_number
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Pattern_Set_number(uint8_t setx)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x66); //PTNO
+	temp &= 0x80;
+	LCD_WriteData(temp|setx);
+
+}
+
+/*******************************************************************************
+* Function Name  : BackgroundColor_TransparentMode
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void BackgroundColor_TransparentMode(uint8_t setR,uint8_t setG,uint8_t setB)
+{
+	LCD_WriteReg(0x67,setR);//BGTR_R
+
+	LCD_WriteReg(0x68,setG);//BGTR_G
+
+	LCD_WriteReg(0x69,setB);//BGTR_B
+}
+
+//REG[70h]~REG[74h]
+//==============================================================================
+//Subroutine:	Enable_TP
+//==============================================================================
+void Enable_TP(void)
+{
+    LCD_WriteReg_ORMask(0x70,0X80);//TPCR0
+}
+//==============================================================================
+//Subroutine:	Disable_TP
+//==============================================================================
+void Disable_TP(void)
+{
+	LCD_WriteReg_ANDMask(0x70,0X7f);//TPCR0
+}
+
+
+//==============================================================================
+//Subroutine:	Disable_Touch_WakeUp
+//==============================================================================
+void Disable_Touch_WakeUp(void)
+{
+	LCD_WriteReg_ANDMask(0x70,0Xf7);//TPCR0
+
+}
+
+
+//==============================================================================
+//Subroutine:	Disable_Touch_WakeUp
+//==============================================================================
+void Enable_Touch_WakeUp(void)
+{
+	LCD_WriteReg_ORMask(0x70,0X08);//TPCR0
+}
+
+//==============================================================================
+//Subroutine:	TP manual or auto  mode enable
+//==============================================================================
+void TP_manual_mode(void)
+{
+	LCD_WriteReg_ORMask(0x71,0x40);//TPCR1
+
+}
+void TP_auto_mode(void)
+{
+	LCD_WriteReg_ANDORMask(0x71,0xbf,0x04);
+
+}
+//==============================================================================
+//Subroutine:	TP_IDLE_mode
+//==============================================================================
+void TP_IDLE_mode(void)
+{
+    uint8_t temp;
+    LCD_CmdWrite(0x71);//TPCR1
+    temp=LCD_DataRead();
+    temp &= 0xf0;
+    LCD_DataWrite(temp);
+ }
+//==============================================================================
+//Subroutine:	TP_event_mode
+//==============================================================================
+void TP_event_mode(void)
+{
+    uint8_t temp;
+    LCD_CmdWrite(0x71);//TPCR1
+    temp=LCD_DataRead();
+    temp &= 0xf0;
+    temp |= 0x01;
+    LCD_DataWrite(temp);
+//  LCD_DataWrite(0xc1);
+}
+//==============================================================================
+//Subroutine:	TP_latch_X
+//==============================================================================
+void TP_latch_X(void)
+{
+    uint8_t temp;
+    LCD_CmdWrite(0x71);//TPCR1
+    temp=LCD_DataRead();
+    temp &= 0xe0;
+    temp |= 0x02;
+    LCD_DataWrite(temp);
+ }
+ //==============================================================================
+//Subroutine:	TP_latch_Y
+//==============================================================================
+void TP_latch_Y(void)
+{
+    uint8_t temp;
+    LCD_CmdWrite(0x71);//TPCR1
+    temp=LCD_DataRead();
+    temp &= 0xe0;
+    temp |= 0x03;
+    LCD_DataWrite(temp);
+ }
+
+
+// void TP_LDLE(void)
+// {
+//     uint8_t temp;
+//     LCD_CmdWrite(0x71);//TPCR1
+//     temp=LCD_DataRead();
+//     temp &= 0xc0;
+//     LCD_DataWrite(temp);
+// }
+//==============================================================================
+//Subroutine:	Detect_TP_X_Y coordinate
+//==============================================================================
+uint8_t ADC_X(void)
+{
+    uint8_t temp;
+    LCD_CmdWrite(0x72);//TPXH	 X_coordinate high byte
+    //Chk_Busy();
+    temp=LCD_DataRead();
+    return temp;
+}
+
+uint8_t ADC_Y(void)
+{
+    uint8_t temp;
+    LCD_CmdWrite(0x73);//TPYH	  Y_coordinate high byte
+    //Chk_Busy();
+    temp=LCD_DataRead();
+    return temp;
+}
+
+uint8_t ADC_XY(void)
+{
+    uint8_t temp;
+    LCD_CmdWrite(0x74);//TPXYL	  uint8_t[3:2] Y_coordinate low byte  uint8_t[1:0] X_coordinate low byte
+    temp=LCD_DataRead();
+    return temp;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 /*******************************************************************************
 * Function Name  : Geometric_Coordinate
 * Description    : Set screen color

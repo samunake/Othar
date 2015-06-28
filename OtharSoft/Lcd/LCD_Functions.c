@@ -1,19 +1,27 @@
-
-#include "LCD_Functions.h"
-#include "LCD_Config.h"
-
 /*********************************************************************************************************
 *
-* File                : LCD_Config.c
+* File                : LCD_Driver.c
 * Hardware Environment:
 * Build Environment   : CooCox CoIDE  Version: 1.7.8
 * Version             : V1.0
-* By                  : TomÃ¡s Ariza Crespo
+* By                  : Tomás Ariza Crespo
 *
 *
 *********************************************************************************************************/
 
-/* Includes ------------------------------------------------------------------*/
+
+
+/* Includes --------------------------------------------------------------------------------------------*/
+#include "LCD_Functions.h"
+#include "LCD_Config.h"
+
+
+
+
+
+/* Register Functions ----------------------------------------------------------------------------------*/
+
+//STATUS REGISTER
 
 /*******************************************************************************
 * Function Name  : Chk_Busy
@@ -21,7 +29,7 @@
 * Input          : None
 * Output         : None
 * Return         : None
-* Attention		   : None
+* Attention		 : None
 *******************************************************************************/
 void Chk_Busy(void)
 {
@@ -45,25 +53,27 @@ void Chk_Busy_BTE(void)
 	uint8_t temp;
 	do
 	{
-          temp=LCD_StatusRead();
+       temp=LCD_StatusRead();
 	}while((temp&0x40)==0x40);
 }
+
 /*******************************************************************************
 * Function Name  : Chk_Busy_DIR_Access
 * Description    : Check whether the DIR_Access is busy
 * Input          : None
 * Output         : None
 * Return         : None
-* Attention		   : None
+* Attention		 : None
 *******************************************************************************/
 void Chk_Busy_DIR_Access(void)
 {
 	uint8_t  temp;
 	do
 	{
-          temp=LCD_StatusRead();
+       temp=LCD_StatusRead();
 	}while((temp&0x01)==0x01);
 }
+//REG[BFh]
 /*******************************************************************************
 * Function Name  : Chk_DMA_Busy
 * Description    : Check whether the DMA is busy
@@ -77,11 +87,10 @@ void Chk_DMA_Busy(void)
 	uint8_t temp;
 	do
 	{
-	LCD_WriteCmd(0xbf);
-	temp = LCD_ReadData();
+		temp = LCD_ReadReg(0xbf);
 	}while((temp&0x01)==0x01);
 }
-
+//REG[01h]
 /*******************************************************************************
 * Function Name  : Display_ON
 * Description    : Display on
@@ -139,37 +148,6 @@ void Sleep_Mode(void)
 	LCD_WriteReg(0x01,0x02); //PWRR
 
 }
-//REG[46h]~REG[49h]
-void XY_Coordinate(uint16_t X,uint16_t Y)
-{
-	LCD_WriteReg(0x46,X);
-
-    LCD_WriteReg(0x47,X>>8);
-
-    LCD_WriteReg(0x48,Y);
-
-    LCD_WriteReg(0x49,Y>>8);
-
-
-}
-/*******************************************************************************
-* Function Name  : lcd_Reset
-* Description    :
-* Input          : None
-* Output         : None
-* Return         : None
-* Attention		   : None
-*******************************************************************************/
-void LCD_Reset(void)
-{
-
-	 //RA8875 RESET pin
-	GPIO_ResetBits(GPIOC,GPIO_Pin_6);
-	Delay_ms(1);
-	GPIO_SetBits(GPIOC,GPIO_Pin_6);
-	Delay_ms(10);
-}
-
 /*******************************************************************************
 * Function Name  : Software_Reset
 * Description    : Software Reset.
@@ -185,6 +163,7 @@ void Software_Reset(void)
     Delay_ms(1);
 }
 
+//REG[04h]
 /*******************************************************************************
 * Function Name  : PCLK_inversion (Pixel Clock Setting Register)
 * Description    : PDAT is fetched at PCLK falling edge.
@@ -201,6 +180,8 @@ void PCLK_inversion(void)
     LCD_WriteData(temp);
 }
 
+
+//
 /*******************************************************************************
 * Function Name  : PCLK_non_inversion (Pixel Clock Setting Register)
 * Description    : PDAT is fetched at PCLK rising edge.
@@ -238,6 +219,7 @@ void PCLK_width(uint8_t setx) //uint8_t[1:0]
     LCD_WriteData(temp);
 }
 
+//REG[05h]
 /*******************************************************************************
 * Function Name  : Serial_ROM_select0
 * Description    : Serial Flash/ROM 0 I/F is selected.
@@ -270,17 +252,1259 @@ void Serial_ROM_select1(void)
     LCD_WriteData(temp);
 }
 
-void Background_color(uint16_t color)
+/*******************************************************************************
+* Function Name  : Serial_ROM_Address_set_24bit
+* Description    : 24 bits address mode
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void Serial_ROM_Address_set_24bit(void)
 {
-	LCD_WriteReg(0x60,color>>11);
+    uint8_t temp;
+	temp = LCD_ReadReg(0x05);
+    temp &=0Xbf; //Bit 6 a 0
 
-    LCD_WriteReg(0x61,color>>5);
+	LCD_WriteReg(0x05,temp);
+}
+/*******************************************************************************
+* Function Name  : Serial_ROM_Address_set_32bit
+* Description    : 32 bits address mode
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void Serial_ROM_Address_set_32bit(void)
+{
+    uint8_t temp;
+	temp = LCD_ReadReg(0x05);
+    temp |=0Xbf; // Bit 6 a 1
 
-    LCD_WriteReg(0x62,color);
+		LCD_WriteReg(0x05,temp);
+}
+/*******************************************************************************
+* Function Name  : Select_Serial_Waveform_mode0
+* Description    : Mode 0.
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void Select_Serial_Waveform_mode0(void)
+{
+    uint8_t temp;
+    temp = LCD_ReadReg(0x05);
+    temp &=0xdf;// Bit 5 a 0
 
+    LCD_WriteReg(0x05,temp);
+}
+/*******************************************************************************
+* Function Name  : Select_Serial_Waveform_mode3
+* Description    : Mode 3.
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void Select_Serial_Waveform_mode3(void)
+{
+    uint8_t temp;
+    temp = LCD_ReadReg(0x05);
+    temp |=0xdf;// Bit 5 a 1
 
+  	LCD_WriteReg(0x05,temp);
+}
+/*******************************************************************************
+* Function Name  : SERIAL_ROM_Read_Cycle_4bus
+* Description    : 4 bus -> no dummy cycle
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void SERIAL_ROM_Read_Cycle_4bus(void)
+{
+    uint8_t temp;
+    temp = LCD_ReadReg(0x05);
+    temp &=0xE7;// Bits 3 y 4 a 0
+
+	LCD_WriteReg(0x05,temp);
 
 }
+/*******************************************************************************
+* Function Name  : SERIAL_ROM_Read_Cycle_5bus
+* Description    : 5 bus -> no dummy cycle
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void SERIAL_ROM_Read_Cycle_5bus(void)
+{
+    uint8_t temp;
+    temp = LCD_ReadReg(0x05);
+    temp &=0xEF;//Bit 4 a 0
+    temp |=0x04;//Bit 3 a 1
+
+    LCD_WriteReg(0x05,temp);
+}
+/*******************************************************************************
+* Function Name  : SERIAL_ROM_Read_Cycle_6bus
+* Description    : 6 bus -> no dummy cycle
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		  : None
+*******************************************************************************/
+void SERIAL_ROM_Read_Cycle_6bus(void)
+{
+	uint8_t temp;
+    temp = LCD_ReadReg(0x05);
+    temp |=0xE0;//Bit 4 a 1
+
+	LCD_WriteReg(0x05,temp);
+}
+/*******************************************************************************
+* Function Name  : SERIAL_ROM_Font_mode
+* Description    : Font mode
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void SERIAL_ROM_Font_mode(void)
+{
+	uint8_t temp;
+    temp = LCD_ReadReg(0x05);
+    temp &=0xFB;//Bit 2 a 0
+    LCD_WriteReg(0x05,temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : SERIAL_ROM_DMA_mode
+* Description    : DMA mode
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void SERIAL_ROM_DMA_mode(void)
+{
+	uint8_t temp;
+    temp = LCD_ReadReg(0x05);
+    temp |=0x04;//Bit 2 a 1
+
+    LCD_WriteReg(0x05,temp);
+}
+/*******************************************************************************
+* Function Name  : SERIAL_ROM_Signal_mode
+* Description    : Single Mode
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void SERIAL_ROM_Signal_mode(void)
+{   uint8_t temp;
+    temp = LCD_ReadReg(0x05);
+    temp &=0xFD;//Bit 1 a 0
+
+    LCD_WriteReg(0x05,temp);
+}
+/*******************************************************************************
+* Function Name  : SERIAL_ROM_Dual_mode0
+* Description    : Dual Mode 0
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+
+void SERIAL_ROM_Dual_mode0(void)
+{   uint8_t temp;
+    temp = LCD_ReadReg(0x05);
+	temp |=0x02;//Bit 1 a 1
+    temp &=0xFE;//Bit 0 a 0
+
+	LCD_WriteReg(0x05,temp);
+}
+/*******************************************************************************
+* Function Name  : SERIAL_ROM_Dual_mode1
+* Description    : Dual Mode 1
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void SERIAL_ROM_Dual_mode1(void)
+{   uint8_t temp;
+    temp = LCD_ReadReg(0x05);
+    temp |=0x03;//Bits 1 y 0 a 1
+
+    LCD_WriteReg(0x05,temp);
+}
+/*******************************************************************************
+* Function Name  : SROM_CLK_DIV
+* Description    : Serial Flash/ROM Clock Frequency Setting
+* Input          : CLK_DIV £ºSerial Flash/ROM Clock Frequency Setting
+*									0xb: SFCL frequency = System clock frequency
+*											 (When DMA enable and Color depth = 256 color
+*											  SFCL frequency = System clock frequency /2)
+*									10b: SFCL frequency = System clock frequency / 2
+*									11b: SFCL frequency = System clock frequency / 4
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void SROM_CLK_DIV(uint8_t CLK_DIV)
+{
+	LCD_WriteReg(0x06,CLK_DIV);
+}
+
+//REG[10h]
+/*******************************************************************************
+* Function Name  : Color_256
+* Description    : Color Depth Setting £¬8-bpp generic TFT, i.e. 256 colors
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void Color_256(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x10);
+	temp &= 0xF3;// Bits 3 y 2 a 0
+
+	LCD_WriteReg(0x10,temp);
+}
+/*******************************************************************************
+* Function Name  : Color_65K
+* Description    : Color Depth Setting 16-bpp generic TFT, i.e. 65K colors.
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void Color_65K(void)
+{
+     uint8_t temp;
+     temp = LCD_ReadReg(0x10);
+     temp |=0x08 ;//Bit 3 a 1
+
+	 LCD_WriteReg(0x10,temp);
+}
+
+/*******************************************************************************
+* Function Name  : MPU_8bit_Interface
+* Description    : MCUIF Selection £¬ 8-bit MCU Interface.
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void MPU_8bit_Interface(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x10);
+	temp &= 0xFC ; //Bits 0 y 1 a 0
+
+	LCD_WriteReg(0x10,temp);
+}
+/*******************************************************************************
+* Function Name  : MPU_16bit_Interface
+* Description    : MCUIF Selection £¬ 16-bit MCU Interface.
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void MPU_16bit_Interface(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x10);
+	temp |= 0x02 ;//Bit 1 a 1
+
+	LCD_WriteReg(0x10,temp);
+}
+
+//REG[12h]
+/*******************************************************************************
+* Function Name  : GPI_data
+* Description    : General Purpose Input.
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : KEY_EN : REG[C0h] bit 7
+*******************************************************************************/
+uint8_t GPI_data(void)
+{
+  //Mirar para que se utiliza esta funcion //////////////////////////////////////////////////
+   return LCD_ReadReg(0x12);
+}
+
+//REG[13h]
+/*******************************************************************************
+* Function Name  : GPO_data
+* Description    : General Purpose Output
+* Input          : setx GPO[3:0] : General Purpose Output
+* Output         : None
+* Return         : None
+* Attention		 : KEY_EN : REG[C0h] bit 7
+*******************************************************************************/
+void GPO_data(uint8_t setx)
+{
+   LCD_WriteReg(0x13,setx);
+}
+
+//REG[20h]
+/*******************************************************************************
+* Function Name  : One_Layer
+* Description    : Layer Setting Control £¬One layer configuration is selected.
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void One_Layer(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x20);
+	temp &= 0x7F;// Bit 7 a 0
+
+	LCD_WriteReg(0x20,temp);
+}
+
+/*******************************************************************************
+* Function Name  : Two_Layers
+* Description    : Layer Setting Control £¬Two layers configuration is selected..
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void Two_Layers(void)
+{	uint8_t temp;
+	temp = LCD_ReadReg(0x20);
+	temp |= 0x80;// Bit 7 a 1
+
+	LCD_WriteReg(0x20,temp);
+}
+/*******************************************************************************
+* Function Name  : HDIR_SEG0_SEGn
+* Description    : Horizontal Scan Direction, for n = SEG number. SEG0 to SEG(n-1).
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void HDIR_SEG0_SEGn(void)
+{	uint8_t temp;
+	temp = LCD_ReadReg(0x20);
+	temp &= 0xf7;//Bit 3 a 0
+
+	LCD_WriteReg(0x20,temp);
+}
+/*******************************************************************************
+* Function Name  : HDIR_SEGn_SEG0
+* Description    : Horizontal Scan Direction, for n = SEG number. SEG(n-1) to SEG0.
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void HDIR_SEGn_SEG0(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x20);
+	temp |= 0x08;//Bit 3 a 1
+
+	LCD_WriteReg(0x20,temp);
+}
+/*******************************************************************************
+* Function Name  : VDIR_COM0_COMn
+* Description    : Vertical Scan direction, for n = COM numbe £ºCOM0 to COM(n-1)
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void VDIR_COM0_COMn(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x20);
+	temp &= 0xfb;//Bit 2 a 0
+
+	LCD_WriteReg(0x20,temp);
+}
+/*******************************************************************************
+* Function Name  : VDIR_COMn_COM0
+* Description    : Vertical Scan direction, for n = COM numbe £ºCOM(n-1) to COM0
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void VDIR_COMn_COM0(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x20);
+	temp |= 0x04; // Bit 2 a 1
+
+	LCD_WriteReg(0x20,temp);
+}
+
+//REG[21h]
+/*******************************************************************************
+* Function Name  : CGROM_Font
+* Description    : CGRAM/CGROM Font Selection Bit in Text Mode £¬CGROM font is selected.
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 :  The bit is used to select the bit-map source when text-
+										mode is active(REG[40h] bit 7 is 1), when CGRAM is
+										writing(REG[41h] bit 3-2 =01b), the bit  must be set as ¡°0¡±.
+*******************************************************************************/
+void CGROM_Font(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x21);
+	temp &= 0x7f; //Bit 7 a 0
+
+	LCD_WriteReg(0x21,temp);
+}
+/*******************************************************************************
+* Function Name  : CGROM_Font
+* Description    : CGRAM/CGROM Font Selection Bit in Text Mode £¬CGRAM font is selected.
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 :  The bit is used to select the bit-map source when text-
+										mode is active(REG[40h] bit 7 is 1), when CGRAM is
+										writing(REG[41h] bit 3-2 =01b), the bit  must be set as ¡°0¡±.
+*******************************************************************************/
+void CGRAM_Font(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x21);
+	temp |= 0x80;//Bit 7 a 1
+
+	LCD_WriteReg(0x21,temp);
+}
+/*******************************************************************************
+* Function Name  : Internal_CGROM
+* Description    : External/Internal CGROM Selection Bit £¬
+									 Internal CGROM is selected.(REG[2Fh] must be set 00h )
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+
+void Internal_CGROM(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x21);
+	temp &= 0xdf;//Bit 5 a 0
+
+	LCD_WriteReg(0x21,temp);
+}
+/*******************************************************************************
+* Function Name  : External_CGROM
+* Description    : External/Internal CGROM Selection Bit £¬
+									  External CGROM is selected.
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void External_CGROM(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x21);
+	temp |= 0x20;// Bit 5 a 1
+
+	LCD_WriteReg(0x21,temp);
+}
+/*******************************************************************************
+* Function Name  : ISO8859_1
+* Description    :  When FNCR0 B7 = 0 and B5 = 0, Internal CGROM supports the
+										8x16 character sets with the standard coding of ISO/IEC 8859-
+										1~4, which supports English and most of European country
+										languages.
+
+										Selection ISO/IEC 8859-1.
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void ISO8859_1(void)
+{
+	uint8_t temp;
+	temp = LLCD_ReadReg(0x21);
+	temp &= 0xfc;//Bits 1 y 0 a 0
+
+	LCD_WriteReg(0x21,temp);
+}
+/*******************************************************************************
+* Function Name  : ISO8859_2
+* Description    :  When FNCR0 B7 = 0 and B5 = 0, Internal CGROM supports the
+										8x16 character sets with the standard coding of ISO/IEC 8859-
+										1~4, which supports English and most of European country
+										languages.
+
+										Selection ISO/IEC 8859-2.
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void ISO8859_2(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x21);
+	temp &=0xfd ;//Bit 1 a 0
+	temp |=0x01; //Bit 0 a 1
+
+	LCD_WriteReg(0x21,temp);
+}
+/*******************************************************************************
+* Function Name  : ISO8859_3
+* Description    :  When FNCR0 B7 = 0 and B5 = 0, Internal CGROM supports the
+										8x16 character sets with the standard coding of ISO/IEC 8859-
+										1~4, which supports English and most of European country
+										languages.
+
+										Selection ISO/IEC 8859-3.
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void ISO8859_3(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadData(0x21);
+	temp &= 0xfe; //Bit 0 a 0
+	temp |= 0x02; //Bit 1 a 1
+
+	LCD_WriteReg(0x21,temp);
+}
+/*******************************************************************************
+* Function Name  : ISO8859_4
+* Description    :  When FNCR0 B7 = 0 and B5 = 0, Internal CGROM supports the
+										8x16 character sets with the standard coding of ISO/IEC 8859-
+										1~4, which supports English and most of European country
+										languages.
+
+										Selection ISO/IEC 8859-4.
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void ISO8859_4(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x21);
+	temp |= 0x03;//Bits 1 y 0 a 1
+
+	LCD_WriteReg(0x21,temp);
+}
+
+
+//REG[22h]
+/*******************************************************************************
+* Function Name  : No_FullAlignment
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void No_FullAlignment(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x22);
+	temp &= 0x7f;//Bit 7 a 0
+
+	LCD_WriteReg(0x22,temp);
+}
+
+/*******************************************************************************
+* Function Name  : FullAlignment
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void FullAlignment(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x22);
+	temp |= 0x80;//Bit 7 a 1
+
+	LCD_WriteReg(0x22,temp);
+}
+
+/*******************************************************************************
+* Function Name  : Font_with_BackgroundColor
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Font_with_BackgroundColor(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x22);
+	temp &= 0xbf;//Bit 6 a 0
+
+	LCD_WriteReg(0x22,temp);
+}
+
+/*******************************************************************************
+* Function Name  : Font_with_BackgroundTransparency
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Font_with_BackgroundTransparency(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x22);
+	temp |= 0x40;//Bit 6 a 1
+
+	LCD_WriteReg(0x22,temp);
+}
+
+/*******************************************************************************
+* Function Name  : NoRotate_Font
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void NoRotate_Font(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x22);
+	temp &= 0xef;//Bit 4 a 0
+
+	LCD_WriteReg(0x22,temp);
+}
+
+/*******************************************************************************
+* Function Name  : Rotate90_Font
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Rotate90_Font(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x22);
+	temp |= 0x10;// Bit 4 a 1
+
+	LCD_WriteReg(0x22,temp);
+}
+
+/*******************************************************************************
+* Function Name  : Horizontal_FontEnlarge_x1
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Horizontal_FontEnlarge_x1(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x22);
+	temp &= 0xf3;//Bits 2 y 3 a 0
+
+	LCD_WriteReg(0x22,temp);
+}
+
+/*******************************************************************************
+* Function Name  : Horizontal_FontEnlarge_x2
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Horizontal_FontEnlarge_x2(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x22);
+	temp &= 0xf7;//Bit 3 a 0
+	temp |= 0x04;//Bit 2 a 1
+
+	LCD_WriteReg(0x22,temp);
+}
+
+/*******************************************************************************
+* Function Name  : Horizontal_FontEnlarge_x3
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Horizontal_FontEnlarge_x3(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x22);
+	temp &= 0xfb;//Bit 2 a 0
+	temp |= 0x08;//Bit 3 a 1
+
+	LCD_WriteReg(0x22,temp);
+}
+
+/*******************************************************************************
+* Function Name  : Horizontal_FontEnlarge_x4
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Horizontal_FontEnlarge_x4(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x22);
+	temp |= 0x0c;//Bits 2 y 3 a 1
+
+	LCD_WriteReg(0x22,temp);
+}
+
+/*******************************************************************************
+* Function Name  : Vertical_FontEnlarge_x1
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Vertical_FontEnlarge_x1(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x22);
+	temp &= 0xfc;//Bits 0 y 1 a 0
+
+	LCD_WriteReg(0x22,temp);
+}
+
+/*******************************************************************************
+* Function Name  : Vertical_FontEnlarge_x2
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Vertical_FontEnlarge_x2(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x22);
+	temp &= 0xfd;//Bit 1 a 0
+	temp |= 0x01;//Bit 0 a 1
+
+	LCD_WriteReg(0x22,temp);
+}
+
+/*******************************************************************************
+* Function Name  : Vertical_FontEnlarge_x3
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Vertical_FontEnlarge_x3(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x22);
+	temp &= 0xfe;//Bit 0 a 1
+	temp |= 0x02;//Bit 1 a 0
+
+	LCD_WriteReg(0x22,temp);
+}
+
+/*******************************************************************************
+* Function Name  : Vertical_FontEnlarge_x4
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Vertical_FontEnlarge_x4(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x22);
+	temp |= 0x03;//Bit 0 y 1 a 1
+
+	LCD_WriteReg(0x22,temp);
+}
+
+
+//REG[23h]
+/*******************************************************************************
+* Function Name  : CGRAM_Select_Number
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void CGRAM_Select_Number(uint8_t setx)
+{
+	LCD_WriteReg(0x23,setx);
+}
+
+
+//REG[24h]REG[25h]REG[26h]REG[27h]
+/*******************************************************************************
+* Function Name  : Scroll_Offset
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Scroll_Offset(uint16_t X,uint16_t Y)
+{
+	LCD_WriteReg(0x24,X);
+
+	LCD_WriteReg(0x25,X>>8);
+
+	LCD_WriteReg(0x26,Y);
+
+	LCD_WriteReg(0x27,Y>>8);
+}
+
+
+//REG[29h]
+/*******************************************************************************
+* Function Name  : Line_distance
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Line_distance(uint8_t setx)
+{
+	LCD_WriteReg(0x29,setx);
+}
+
+
+//REG[2Ah]REG[2Bh]REG[2Ch]REG[2Dh]
+/*******************************************************************************
+* Function Name  : Font_Coordinate
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Font_Coordinate(uint16_t X,uint16_t Y)
+{
+
+	LCD_WriteReg(0x2A,X);
+
+	LCD_WriteReg(0x2B,X>>8);
+
+	LCD_WriteReg(0x2C,Y);
+
+	LCD_WriteReg(0x2D,Y>>8);
+}
+
+
+
+//REG[2Eh]
+/*******************************************************************************
+* Function Name  : Font_size_16x16_8x16
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Font_size_16x16_8x16(void)
+{
+ 	uint8_t temp;
+	temp = LCD_ReadReg(0x2E);
+	temp &= 0x3f;//Bits 6 y 7 a 0
+
+	LCD_WriteReg(0x2E,temp);
+}
+
+/*******************************************************************************
+* Function Name  : Font_size_24x24_12x24
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Font_size_24x24_12x24(void)
+{
+ 	uint8_t temp;
+	temp = LCD_ReadReg(0x2E);
+	temp &= 0x7f;//Bit 7 a 0
+	temp |= 0x40; //Bit 6 a 1
+
+	LCD_WriteReg(0x2E,temp);
+}
+
+/*******************************************************************************
+* Function Name  : Font_size_32x32_16x32
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Font_size_32x32_16x32(void)
+{
+ 	uint8_t temp;
+	temp = LCD_ReadReg(0x2E);
+	temp |= 0x80;//Bit 7 a 1
+
+	LCD_WriteReg(0x2E,temp);
+}
+
+/*******************************************************************************
+* Function Name  : Font_spacing_set
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Font_spacing_set(uint8_t setx) //uint8_t[5:0]
+{   uint8_t temp,temp1;
+    temp1=setx&0x3F;//Nos quedamos con los bits 5:0 de setx
+   	temp = LCD_ReadReg(0x2E);
+	temp &= 0xc0;//Bits 5:0 a 0
+	temp |= temp1;
+	LCD_WriteReg(0x2E,temp);
+
+}
+
+//REG[2Fh]
+/*******************************************************************************
+* Function Name  : GT_serial_ROM_select_GT21L16TW
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void GT_serial_ROM_select_GT21L16TW(void)//GT21L16T1W
+{ uint8_t temp;
+  temp = LCD_ReadReg(0x2F);
+  temp &= 0x1f;//Bit 5:7 a 0
+
+  LCD_WriteReg(0x2F,temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : GT_serial_ROM_select_GT21L16TW
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void GT_serial_ROM_select_GT30L16U2W(void)
+{ uint8_t temp;
+  temp = LCD_ReadReg(0x2F);
+  temp &= 0x1f;//Bit 5:7 a 0
+  temp |= 0x20;//Bit 5 a 1
+
+  LCD_WriteReg(0x2F,temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : GT_serial_ROM_select_GT30L24T3Y
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void GT_serial_ROM_select_GT30L24T3Y(void)//GT30H24T3Y
+{ uint8_t temp;
+  temp = LCD_ReadReg(0x2F);
+  temp &= 0x1f;//Bit 5:7 a 0
+  temp |= 0x40;//Bit 6 a 1
+
+  LCD_WriteReg(0x2F,temp);
+}
+
+/*******************************************************************************
+* Function Name  : GT_serial_ROM_select_GT30L24M1Z
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void GT_serial_ROM_select_GT30L24M1Z(void)
+{ uint8_t temp;
+  temp = LCD_ReadReg(0x2F);
+  temp &= 0x1f;//Bit 5:7 a 0
+  temp |= 0x60;//Bit 5 y 6 a 1
+
+  LCD_WriteReg(0x2F,temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : GT_serial_ROM_select_GT30L32S4W
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void GT_serial_ROM_select_GT30L32S4W(void)//GT30H32S4W
+{ uint8_t temp;
+  temp = LCD_ReadReg(0x2F);
+  temp &= 0x1f;//Bit 5:7 a 0
+  temp |= 0x80;//Bit 7 a 1
+
+  LCD_WriteReg(0x2F,temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : Font_code_GB2312
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Font_code_GB2312(void)
+{ uint8_t temp;
+  temp = LCD_ReadReg(0x2F);
+  temp &= 0xE3;//Bits 4:2 a 0
+
+  LCD_WriteReg(0x2F,temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : Font_code_GB12345
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Font_code_GB12345(void)//GB18030
+{ uint8_t temp;
+  temp = LCD_ReadReg(0x2F);
+  temp &= 0xE3;//Bits 4:2 a 0
+  temp |= 0x04;//Bit 2 a 1
+
+  LCD_WriteReg(0x2F,temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : Font_code_BIG5
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Font_code_BIG5(void)
+{ uint8_t temp;
+  temp = LCD_ReadReg(0x2F);
+  temp &= 0xE3;//Bits 4:2 a 0
+  temp |= 0x08;//Bit 3 a 1
+
+  LCD_WriteReg(0x2F,temp);
+}
+
+/*******************************************************************************
+* Function Name  : Font_code_UNICODE
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Font_code_UNICODE(void)
+{ uint8_t temp;
+  temp = LCD_ReadReg(0x2F);
+  temp &= 0xE3;//Bits 4:2 a 0
+  temp |= 0x0C;//Bits 3 y 4 a 1
+
+  LCD_WriteReg(0x2F,temp);
+}
+
+/*******************************************************************************
+* Function Name  : Font_code_ASCII
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Font_code_ASCII(void)
+{ uint8_t temp;
+  temp = LCD_ReadReg(0x2F);
+  temp &= 0xE3;//Bits 4:2 a 0
+  temp |= 0x10;//Bit 4 a 1
+
+  LCD_WriteReg(0x2F,temp);
+}
+
+/*******************************************************************************
+* Function Name  : Font_code_UNIJIS
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Font_code_UNIJIS(void)
+{ uint8_t temp;
+  temp = LCD_ReadReg(0x2F);
+  temp &= 0xE3;//Bits 4:2 a 0
+  temp |= 0x14;//Bits 4 y 2 a 1
+
+  LCD_WriteReg(0x2F,temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : Font_code_JIS0208
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Font_code_JIS0208(void)
+{ uint8_t temp;
+  temp = LCD_ReadReg(0x2F);
+  temp &= 0xE3;//Bits 4:2 a 0
+  temp |= 0x18;//Bits 4 y 3 a 1
+
+  LCD_WriteReg(0x2F,temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : Font_code_LATIN
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Font_code_LATIN(void)
+{ uint8_t temp;
+  temp = LCD_ReadReg(0x2F);
+  temp &= 0xE3;//Bits 4:2 a 0
+  temp |= 0x1C;//Bits 4:2 a 1
+
+  LCD_WriteReg(0x2F,temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : Font_Standard
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Font_Standard(void)
+{ uint8_t temp;
+  temp = LCD_ReadReg(0x2F);
+  temp &= 0xFC;//Bits 0 y 1 a 0
+
+  LCD_WriteReg(0x2F,temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : Font_Arial
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Font_Arial(void)
+{ uint8_t temp;
+  temp = LCD_ReadReg(0x2F);
+  temp &= 0xFE;//Bit 1 a 0
+  temp |= 0x01;//Bit 0 a 1
+
+  LCD_WriteReg(0x2F,temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : Font_Roman
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Font_Roman(void)
+{ uint8_t temp;
+  temp = LCD_ReadReg(0x2F);
+  temp &= 0xFd;//Bit 0 a 0
+  temp |= 0x02;//Bit 1 a 1
+
+  LCD_WriteReg(0x2F,temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : Font_Bold
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Font_Bold(void) //for ASCII
+{ uint8_t temp;
+  temp = LCD_ReadReg(0x2F);
+  temp |= 0x03;//Bit 0 y 1 a 1
+
+  LCD_WriteReg(0x2F,temp);
+}
+
+//REG[30h]~REG[37h]
 /*******************************************************************************
 * Function Name  : Active Window
 * Description    :
@@ -289,27 +1513,48 @@ void Background_color(uint16_t color)
 * Return         : None
 * Attention	     : None
 *******************************************************************************/
-//-------------------------------------------//
-//REG[30h]~REG[37h]
 void Active_Window(uint16_t XL,uint16_t XR ,uint16_t YT ,uint16_t YB)
 {
     //setting active window X
-
 	LCD_WriteReg(0x30,XL & 0x00ff); //Horizontal Start Point 0 of Active Window (HSAW0)
 	LCD_WriteReg(0x31,XL>>8); //Horizontal Start Point 1 of Active Window (HSAW1)
 	LCD_WriteReg(0x34,XR & 0x00ff); //Horizontal End Point 0 of Active Window (HEAW0)
 	LCD_WriteReg(0x35,XR>>8); //Horizontal End Point 1 of Active Window (HEAW1)
 
-
     //setting active window Y
-
 	LCD_WriteReg(0x32,YT& 0x00ff); //Vertical Start Point 0 of Active Window (VSAW0)
 	LCD_WriteReg(0x33,YT>>8); //Vertical Start Point 1 of Active Window (VSAW1)
 	LCD_WriteReg(0x36,YB & 0x00ff); //Vertical End Point of Active Window 0 (VEAW0)
 	LCD_WriteReg(0x37,YB>>8); //Vertical End Point of Active Window 1 (VEAW1)
-
-
 }
+
+//REG[38h]~REG[3Fh]
+/*******************************************************************************
+* Function Name  : Scroll_Window
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Scroll_Window(uint16_t XL,uint16_t XR ,uint16_t YT ,uint16_t YB)
+{
+
+	LCD_WriteReg(0x38,XL);
+	LCD_WriteReg(0x39,XL>>8);
+
+	LCD_WriteReg(0x3c,XR);
+	LCD_WriteReg(0x3d,XR>>8);
+
+	LCD_WriteReg(0x3a,YT);
+	LCD_WriteReg(0x3b,YT>>8);
+
+    LCD_WriteReg(0x3e,YB);
+	LCD_WriteReg(0x3f,YB>>8);
+}
+
+
+//REG[40h]
 /*******************************************************************************
 * Function Name  : Graphic_Mode
 * Description    :
@@ -327,6 +1572,725 @@ void Graphic_Mode(void)
 }
 
 /*******************************************************************************
+* Function Name  : Text_Mode
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Text_Mode(void)
+{
+  uint8_t temp;
+  temp = LCD_ReadReg(0x40);//MWCR0
+  temp |= 0X80 ;
+  LCD_WriteData(temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : Text_Cursor_Disable
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Text_Cursor_Disable(void)
+{
+  uint8_t temp;
+  temp = LCD_ReadReg(0x40);
+  temp &= 0Xbf ;
+  LCD_WriteData(temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : Text_Cursor_Enable
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Text_Cursor_Enable(void)
+{
+  uint8_t temp;
+  temp = LCD_ReadReg(0x40);
+  temp |= 0x40 ;
+  LCD_WriteData(temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : Text_Cursor_Blink_Disable
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Text_Cursor_Blink_Disable(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x40);
+	temp &= 0xdf ;
+	LCD_WriteData(temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : Text_Cursor_Blink_Enable
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Text_Cursor_Blink_Enable(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x40);
+	temp |= 0x20 ;
+	LCD_WriteData(temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : Memory_Write_LeftRight_TopDown
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Memory_Write_LeftRight_TopDown(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x40);
+	temp &= 0xf3 ;
+	LCD_WriteData(temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : Memory_Write_RightLeft_TopDown
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Memory_Write_RightLeft_TopDown(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x40);
+	temp &= 0xf3 ;
+	temp |= 0x04 ;
+	LCD_WriteData(temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : Memory_Write_DownTop_LeftRight
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Memory_Write_DownTop_LeftRight(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x40);
+	temp &= 0xf3 ;
+	temp |= 0x0c ;
+	LCD_WriteData(temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : Memory_Write_TopDown_LeftRight
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Memory_Write_TopDown_LeftRight(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x40);
+	temp &= 0xf3 ;
+	temp |= 0x08 ;
+	LCD_WriteData(temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : MemoryWrite_Cursor_autoIncrease
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void MemoryWrite_Cursor_autoIncrease(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x40);
+	temp &= 0xfd ;
+	LCD_WriteData(temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : MemoryWrite_Cursor_NoautoIncrease
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void MemoryWrite_Cursor_NoautoIncrease(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x40);
+	temp |= 0x02 ;
+	LCD_WriteData(temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : MemoryRead_Cursor_autoIncrease
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void MemoryRead_Cursor_autoIncrease(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x40);
+	temp &= 0xfe ;
+	LCD_WriteData(temp);
+}
+
+
+/*******************************************************************************
+* Function Name  : MemoryRead_Cursor_NoautoIncrease
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void MemoryRead_Cursor_NoautoIncrease(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x40);
+	temp |= 0x01 ;
+	LCD_WriteData(temp);
+}
+
+
+//REG[41h]
+/*******************************************************************************
+* Function Name  : No_Graphic_Cursor
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void No_Graphic_Cursor(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x41);
+	temp &= 0x7f ;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Graphic_Cursor
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Graphic_Cursor(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x41);
+	temp |= 0x80 ;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Graphic_Cursor_Set1
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Graphic_Cursor_Set1(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x41);
+	temp &= 0x8f;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Graphic_Cursor_Set2
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Graphic_Cursor_Set2(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x41);
+	temp &= 0x8f ;
+	temp |= 0x10 ;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Graphic_Cursor_Set3
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Graphic_Cursor_Set3(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x41);
+	temp &= 0x8f ;
+	temp |= 0x20 ;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Graphic_Cursor_Set4
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Graphic_Cursor_Set4(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x41);
+	temp &= 0x8f ;
+	temp |= 0x30 ;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Graphic_Cursor_Set5
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Graphic_Cursor_Set5(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x41);
+	temp &= 0x8f ;
+	temp |= 0x40 ;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Graphic_Cursor_Set6
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Graphic_Cursor_Set6(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x41);
+	temp &= 0x8f ;
+	temp |= 0x50 ;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Graphic_Cursor_Set7
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Graphic_Cursor_Set7(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x41);
+	temp &= 0x8f ;
+	temp |= 0x60 ;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Graphic_Cursor_Set8
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Graphic_Cursor_Set8(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x41);
+	temp &= 0x8f ;
+	temp |= 0x70 ;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Write_To_Bank1and2
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Write_To_Bank1and2(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x41);
+	temp &= 0xf3 ;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Write_To_CGRAM
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Write_To_CGRAM(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x41);
+	temp &= 0xf3;
+	temp |= 0x04;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Write_To_GraphicCursor
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Write_To_GraphicCursor(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x41);
+	temp &= 0xf3;
+	temp |= 0x08 ;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Write_To_Pattern
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Write_To_Pattern(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x41);
+	temp &= 0xf3;
+	temp |= 0x0c ;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Write_To_Bank1
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Write_To_Bank1(void)
+{	uint8_t temp;
+	temp = LCD_ReadReg(0x41);
+	temp &= 0xfe ;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Write_To_Bank2
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Write_To_Bank2(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x41);
+	temp |= 0x01 ;
+	LCD_WriteData(temp);
+}
+
+
+//REG[44h]
+/*******************************************************************************
+* Function Name  : Text_Blink_Time
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Text_Blink_Time(uint8_t setx)
+{
+	LCD_WriteReg(0x44,setx);
+
+}
+
+//REG[45h]
+/*******************************************************************************
+* Function Name  : Text_Blink_Time
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Memory_read_LeftRight_TopDown(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x45);
+	temp &= 0xfc;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Memory_read_RightLeft_TopDown
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Memory_read_RightLeft_TopDown(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x45);
+	temp |= 0x01;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Memory_read_TopDown_LeftRight
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Memory_read_TopDown_LeftRight(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x45);
+	temp |= 0x02;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : Memory_read_DownTop_LeftRight
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Memory_read_DownTop_LeftRight(void)
+{
+	uint8_t temp;
+	temp = LCD_ReadReg(0x45);
+	temp |= 0x03;
+	LCD_WriteData(temp);
+}
+
+
+//REG[46h]~REG[49h]
+/*******************************************************************************
+* Function Name  : XY_Coordinate
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void XY_Coordinate(uint16_t X,uint16_t Y)
+{
+	LCD_WriteReg(0x46,X);
+    LCD_WriteReg(0x47,X>>8);
+
+    LCD_WriteReg(0x48,Y);
+    LCD_WriteReg(0x49,Y>>8);
+}
+
+//REG[4Ah]~REG[4Dh]
+/*******************************************************************************
+* Function Name  : Memory_read_Coordinate
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Memory_read_Coordinate(uint16_t X,uint16_t Y)
+{
+
+	LCD_WriteReg(0x4a,X);
+	LCD_WriteReg(0x4b,X>>8);
+
+	LCD_WriteReg(0x4c,Y);
+	LCD_WriteReg(0x4d,Y>>8);
+}
+
+//REG[4Eh]
+/*******************************************************************************
+* Function Name  : Text_Cursor_Horizontal_Size
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Text_Cursor_Horizontal_Size(uint8_t setx)//uint8_t[3:0]
+{
+	LCD_WriteReg(0x4e,setx);//CURS
+
+}
+
+//REG[4Fh]
+/*******************************************************************************
+* Function Name  : Text_Cursor_Vertical_Size
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void Text_Cursor_Vertical_Size(uint8_t setx)//uint8_t[3:0]
+{
+	LCD_WriteReg(0x4f,setx);//CURS
+
+}
+
+
+//REG[50h]
+/*******************************************************************************
+* Function Name  : no_BTE_write
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void no_BTE_write(void)
+{
+    uint8_t temp;
+	LCD_ReadReg(0x50);//BECR0
+	temp &= 0X7f ;
+	LCD_WriteData(temp);
+}
+
+/*******************************************************************************
+* Function Name  : BTE_enable
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void BTE_enable(void)
+{
+	uint8_t temp;
+	LCD_ReadReg(0x50);//BECR0
+	temp |= 0X80 ;
+	LCD_DataWrite(temp);
+}
+
+/*******************************************************************************
+* Function Name  : BTE_contiguous_Data
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void BTE_contiguous_Data(void)
+{
+	uint8_t temp;
+	LCD_ReadReg(0x50);//BECR0
+	temp |= 0X40 ;
+	LCD_DataWrite(temp);
+}
+
+/*******************************************************************************
+* Function Name  : BTE_rectangular_Data
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention	     : None
+*******************************************************************************/
+void BTE_rectangular_Data(void)
+{
+	uint8_t temp;
+	LCD_ReadReg(0x50);//BECR0
+	temp &= 0Xbf ;
+	LCD_DataWrite(temp);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//REG[60h]
+/*******************************************************************************
 * Function Name  : Text Color
 * Description    : Set screen color
 * Input          : Color: Screen Color
@@ -341,16 +2305,22 @@ void Text_color(uint16_t color)
     LCD_WriteReg(0x64,((color&0x07e0)>>5));
     LCD_WriteReg(0x65,color&0x001f);
 
-  #ifdef Color256
-    LCD_CmdWrite(0x63);
-    LCD_DataWrite((color&0xf800)>>13);
+}
+/*******************************************************************************
+* Function Name  : Background_color
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		 : None
+*******************************************************************************/
+void Background_color(uint16_t color)
+{
+	LCD_WriteReg(0x60,color>>11);
 
-    LCD_CmdWrite(0x64);
-    LCD_DataWrite((color&0x07e0)>>8);
+    LCD_WriteReg(0x61,color>>5);
 
-    LCD_CmdWrite(0x65);
-    LCD_DataWrite((color&0x001f)>>3);
- #endif
+    LCD_WriteReg(0x62,color);
 }
 /*******************************************************************************
 * Function Name  : Geometric_Coordinate
@@ -402,3 +2372,23 @@ void LCD_Clear(u16 color)
 
 	Display_ON();
 }
+
+
+/*******************************************************************************
+* Function Name  : lcd_Reset
+* Description    :
+* Input          : None
+* Output         : None
+* Return         : None
+* Attention		   : None
+*******************************************************************************/
+void LCD_Reset(void)
+{
+
+	 //RA8875 RESET pin
+	GPIO_ResetBits(GPIOC,GPIO_Pin_6);
+	Delay_ms(1);
+	GPIO_SetBits(GPIOC,GPIO_Pin_6);
+	Delay_ms(10);
+}
+

@@ -31,6 +31,9 @@
       <target file="main.o" lastModified="14e3a9180a8">
          <source file="..\..\..\main.c" lastModified="14e3a0ec12d"/>
       </target>
+      <target file="LCD_Interface.o" lastModified="14e3a9c1d04">
+         <source file="..\..\..\Lcd\LCD_Interface.c" lastModified="14e3a9c12e7"/>
+      </target>
       <target file="stm32f4xx_fsmc.o" lastModified="14e3a918c5e">
          <source file="..\..\..\cmsis_lib\source\stm32f4xx_fsmc.c" lastModified="14e3a0ec11e"/>
       </target>

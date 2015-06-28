@@ -2006,6 +2006,7 @@ void BTE_contiguous_Data(void)
 *******************************************************************************/
 void BTE_rectangular_Data(void)
 {
+	LCD_WriteReg_ANDMask(0x50,0x3F,0x80);//BECR0
 	uint8_t temp;
 	LCD_ReadReg(0x50);//BECR0
 	temp &= 0Xbf ;
@@ -2037,10 +2038,7 @@ void BTE_ROP_Code(uint8_t setx)
 *******************************************************************************/
 void Layer1_Visible(void)
 {
-	uint8_t temp;
-	temp = LCD_WriteReg(0x52);//LTPR0
-	temp&=0xf8;
-	LCD_WriteData(temp);
+	LCD_WriteReg_ANDMask(0x52,0xF8);//LTPR0
 }
 
 /*******************************************************************************
@@ -2053,11 +2051,7 @@ void Layer1_Visible(void)
 *******************************************************************************/
 void Layer2_Visible(void)
 {
-	uint8_t temp;
-	temp = LCD_WriteReg(0x52);//LTPR0
-	temp&=0xf8;
-	temp|=0x01;
-	LCD_WriteData(temp);
+	LCD_WriteReg_ANDORMask(0x52,0xF8,0x01);//LTPR0
 }
 
 /*******************************************************************************
@@ -2070,11 +2064,7 @@ void Layer2_Visible(void)
 *******************************************************************************/
 void Transparent_Mode(void)
 {
-	uint8_t temp;
-	temp = LCD_WriteReg(0x52);//LTPR0
-	temp&=0xf8;
-	temp|=0x03;
-	LCD_WriteData(temp);
+	LCD_WriteReg_ANDORMask(0x52,0xF8,0x03);//LTPR0
 }
 
 /*******************************************************************************
@@ -2087,11 +2077,7 @@ void Transparent_Mode(void)
 *******************************************************************************/
 void Lighten_Overlay_Mode(void)
 {
-	uint8_t temp;
-	temp = LCD_WriteReg(0x52);//LTPR0
-	temp&=0xf8;
-	temp|=0x02;
-	LCD_WriteData(temp);
+	LCD_WriteReg_ANDORMask(0x52,0xF8,0x02);//LTPR0
 }
 
 /*******************************************************************************
@@ -2104,11 +2090,7 @@ void Lighten_Overlay_Mode(void)
 *******************************************************************************/
 void Boolean_OR(void)
 {
-	uint8_t temp;
-	temp = LCD_WriteReg(0x52);//LTPR0
-	temp&=0xf8;
-	temp|=0x04;
-	LCD_WriteData(temp);
+	LCD_WriteReg_ANDORMask(0x52,0xF8,0x04);//LTPR0
 }
 
 /*******************************************************************************
@@ -2121,11 +2103,7 @@ void Boolean_OR(void)
 *******************************************************************************/
 void Boolean_AND(void)
 {
-	uint8_t temp;
-	temp = LCD_WriteReg(0x52);//LTPR0
-	temp&=0xf8;
-	temp|=0x05;
-	LCD_WriteData(temp);
+	LCD_WriteReg_ANDORMask(0x52,0xF8,0x05);//LTPR0
 }
 
 /*******************************************************************************
@@ -2138,11 +2116,7 @@ void Boolean_AND(void)
 *******************************************************************************/
 void Floating_window_mode(void)
 {
-	uint8_t temp;
-	temp = LCD_WriteReg(0x52);//LTPR0
-	temp&=0xf8;
-	temp|=0x06;
-	LCD_WriteData(temp);
+	LCD_WriteReg_ANDORMask(0x52,0xF8,0x06);//LTPR0
 }
 
 /*******************************************************************************
@@ -2155,10 +2129,7 @@ void Floating_window_mode(void)
 *******************************************************************************/
 void Floating_Window_transparent_with_BGTR_enable(void)
 {
-	uint8_t temp;
-	temp = LCD_WriteReg(0x52);//LTPR0
-	temp|=0x20;
-	LCD_WriteData(temp);
+	LCD_WriteReg_ORMask(0x52,0x20);//LTPR0
 }
 
 /*******************************************************************************
@@ -2171,10 +2142,7 @@ void Floating_Window_transparent_with_BGTR_enable(void)
 *******************************************************************************/
 void Floating_Window_transparent_with_BGTR_disable(void)
 {
-	uint8_t temp;
-	temp = LCD_WriteReg(0x52);//LTPR0
-	temp&=0xdf;
-	LCD_WriteData(temp);
+	LCD_WriteReg_ANDMask(0x52,0xDF);//LTPR0
 }
 
 /*******************************************************************************
@@ -2187,10 +2155,8 @@ void Floating_Window_transparent_with_BGTR_disable(void)
 *******************************************************************************/
 void Layer1_2_scroll(void)
 {
-	uint8_t temp;
-	temp = LCD_WriteReg(0x52);//LTPR0
-	temp&=0x3f;
-	LCD_WriteData(temp);
+	LCD_WriteReg_ANDMask(0x52,0x3F);//LTPR0
+
 }
 
 /*******************************************************************************
@@ -2203,11 +2169,7 @@ void Layer1_2_scroll(void)
 *******************************************************************************/
 void Layer1_scroll(void)
 {
-	uint8_t temp;
-	temp = LCD_WriteReg(0x52);//LTPR0
-	temp&=0x3f;
-	temp|=0x40;
-	LCD_WriteData(temp);
+	LCD_WriteReg_ANDORMask(0x52,0x3F,0x40);//LTPR0
 }
 
 /*******************************************************************************
@@ -2220,11 +2182,7 @@ void Layer1_scroll(void)
 *******************************************************************************/
 void Layer2_scroll(void)
 {
-	uint8_t temp;
-	temp = LCD_WriteReg(0x52);//LTPR0
-	temp&=0x3f;
-	temp|=0x80;
-	LCD_WriteData(temp);
+	LCD_WriteReg_ANDORMask(0x52,0x3F,0x80);//LTPR0
 }
 
 /*******************************************************************************
@@ -2237,11 +2195,7 @@ void Layer2_scroll(void)
 *******************************************************************************/
 void Buffer_scroll(void)
 {
-	uint8_t temp;
-	temp = LCD_WriteReg(0x52);//LTPR0
-	temp&=0x3f;
-	temp|=0xC0;
-	LCD_WriteData(temp);
+	LCD_WriteReg_ANDORMask(0x52,0x3F,0xC0);//LTPR0
 }
 
 //REG[53h]
